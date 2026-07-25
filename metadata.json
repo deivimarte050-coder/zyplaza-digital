@@ -1,0 +1,6 @@
+{
+  "name": "Zyplaza — Marketplace Local",
+  "description": "Zyplaza — todo tu comercio en un solo lugar. Compra, vende y conecta con tiendas y vendedores verificados en tu ciudad.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
