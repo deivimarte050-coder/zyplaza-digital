@@ -1,0 +1,104 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // El rol admin viaja como custom claim en el token, no en un documento editable.
+    function isAdmin() {
+      return signedIn() && request.auth.token.role == 'admin';
+    }
+
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function storeBelongsToCaller(storeId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/stores/$(storeId))
+        && get(/databases/$(database)/documents/stores/$(storeId)).data.ownerId == request.auth.uid;
+    }
+
+    // Perfiles: cada quien lee y edita el suyo; el rol y el estado solo los cambia un admin.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.role == 'user'
+        && request.resource.data.status == 'active';
+      allow update: if isAdmin()
+        || (isOwner(userId)
+            && request.resource.data.role == resource.data.role
+            && request.resource.data.status == resource.data.status);
+      allow delete: if isAdmin();
+    }
+
+    // Tiendas: visibles para todos si están aprobadas; su dueño las edita salvo el estado.
+    match /stores/{storeId} {
+      allow read: if resource.data.status == 'approved' || isAdmin() || isOwner(resource.data.ownerId);
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status == 'pending';
+      allow update: if isAdmin()
+        || (isOwner(resource.data.ownerId)
+            && request.resource.data.status == resource.data.status);
+      allow delete: if isAdmin();
+    }
+
+    // Productos: públicos si están aprobados y visibles.
+    match /products/{productId} {
+      allow read: if (resource.data.status == 'approved' && resource.data.hidden == false)
+        || isAdmin()
+        || isOwner(resource.data.ownerId);
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && storeBelongsToCaller(request.resource.data.storeId);
+      allow update: if isAdmin()
+        || (isOwner(resource.data.ownerId)
+            && request.resource.data.status == resource.data.status
+            && request.resource.data.featured == resource.data.featured);
+      allow delete: if isAdmin() || isOwner(resource.data.ownerId);
+    }
+
+    // Pedidos: los ve el comprador, el vendedor dueño de la tienda y el admin.
+    match /orders/{orderId} {
+      allow read: if isAdmin()
+        || isOwner(resource.data.buyerId)
+        || storeBelongsToCaller(resource.data.storeId);
+      allow create: if signedIn() && request.resource.data.buyerId == request.auth.uid;
+      allow update: if isAdmin() || storeBelongsToCaller(resource.data.storeId);
+      allow delete: if isAdmin();
+    }
+
+    // Contenido del escaparate: lectura pública, escritura solo del admin.
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Auditoría: solo el admin la lee y solo se puede añadir, nunca alterar ni borrar.
+    match /adminLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    // Todo lo que no esté declarado arriba queda bloqueado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
