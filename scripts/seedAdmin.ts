@@ -107,7 +107,7 @@ async function main(): Promise<void> {
         avatar: '',
         role: 'admin',
         status: 'active',
-        mustChangePassword: true,
+        mustChangePassword: generated,
         updatedAt: FieldValue.serverTimestamp(),
         ...(created ? { createdAt: FieldValue.serverTimestamp(), lastLoginAt: null } : {})
       },
