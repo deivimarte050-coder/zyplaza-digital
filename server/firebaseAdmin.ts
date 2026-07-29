@@ -49,6 +49,15 @@ export function adminAuth(): Auth {
   return getAuth(getAdminApp());
 }
 
+/**
+ * Identificador de la base de Firestore. Firebase usa `(default)` cuando el
+ * proyecto tiene la base estándar, pero un proyecto puede tener bases con
+ * nombre propio, así que se deja configurable.
+ */
+export function firestoreDatabaseId(): string {
+  return process.env.FIREBASE_DATABASE_ID || '(default)';
+}
+
 export function adminDb(): Firestore {
-  return getFirestore(getAdminApp());
+  return getFirestore(getAdminApp(), firestoreDatabaseId());
 }

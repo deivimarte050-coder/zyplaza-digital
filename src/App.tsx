@@ -25,7 +25,10 @@ import { ChatDrawer } from './components/ChatDrawer';
 import { UserProfile } from './components/UserProfile';
 import { AuthModal } from './components/AuthModal';
 import { SellerPanel } from './components/seller/SellerPanel';
+import { signOut } from 'firebase/auth';
 import { readStorage, writeStorage } from './utils/storage';
+import { getFirebaseAuth, isFirebaseConfigured } from './lib/firebase';
+import { useAdminClaim } from './hooks/useAdminClaim';
 
 import { 
   MapPin, 
@@ -57,6 +60,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfileData | null>(() =>
     readStorage<UserProfileData | null>('zyplaza_user', null)
   );
+  const isAdmin = useAdminClaim();
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authReason, setAuthReason] = useState<string>('');
   const [pendingAuthAction, setPendingAuthAction] = useState<(() => void) | null>(null);
@@ -99,6 +103,12 @@ export default function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     localStorage.removeItem('zyplaza_user');
+
+    // Si la sesión venía de Firebase (Google o correo) hay que cerrarla también,
+    // porque es la que concede el acceso al panel de administración.
+    if (isFirebaseConfigured) {
+      void signOut(getFirebaseAuth());
+    }
   };
 
   const [listings, setListings] = useState<Listing[]>(() =>
@@ -371,6 +381,7 @@ export default function App() {
             onLogout={handleLogout}
             onRequestAuth={handleRequestAuth}
             onOpenSellerPanel={() => setShowSellerPanel(true)}
+            isAdmin={isAdmin}
           />
         )}
       </main>

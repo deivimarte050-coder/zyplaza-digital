@@ -14,8 +14,8 @@ import {
   Camera,
   Upload
 } from 'lucide-react';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { getFirebaseAuth } from '../lib/firebase';
+import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { getFirebaseAuth, isFirebaseConfigured } from '../lib/firebase';
 import { UserProfileData } from '../types';
 import { readStorage, writeStorage } from '../utils/storage';
 
@@ -73,7 +73,62 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  /**
+   * Intenta iniciar sesión contra Firebase. Devuelve el perfil si la cuenta
+   * existe allí, o null para que se use el registro local del navegador.
+   */
+  const signInWithFirebase = async (
+    email: string,
+    plainPassword: string
+  ): Promise<UserProfileData | null> => {
+    if (!isFirebaseConfigured) return null;
+
+    try {
+      const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email, plainPassword);
+      const fbUser = credential.user;
+
+      return {
+        id: fbUser.uid,
+        name: fbUser.displayName || email.split('@')[0],
+        email: fbUser.email || email,
+        city,
+        avatar: fbUser.photoURL || undefined,
+        rating: 5.0,
+        salesCount: 0,
+        joinedDate: new Date().toLocaleDateString('es-DO', { month: 'long', year: 'numeric' }),
+        isVerified: fbUser.emailVerified
+      };
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+
+      // Estos códigos significan "esta cuenta no está en Firebase", así que se
+      // sigue con el registro local. Cualquier otro fallo sí debe avisarse.
+      const notInFirebase = [
+        'auth/user-not-found',
+        'auth/invalid-credential',
+        'auth/invalid-email',
+        'auth/wrong-password'
+      ];
+
+      if (notInFirebase.includes(code ?? '')) return null;
+
+      if (code === 'auth/too-many-requests') {
+        throw new Error('Demasiados intentos fallidos. Espera unos minutos.');
+      }
+
+      if (code === 'auth/network-request-failed') {
+        throw new Error('Sin conexión. Revisa tu internet.');
+      }
+
+      if (code === 'auth/user-disabled') {
+        throw new Error('Esta cuenta está suspendida. Contacta al administrador.');
+      }
+
+      throw new Error('No se pudo verificar la cuenta. Inténtalo de nuevo.');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
@@ -145,6 +200,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         return;
       }
 
+      // Las cuentas de correo pueden vivir en Firebase (como la del
+      // administrador), así que se comprueba allí antes del registro local.
+      if (method === 'email') {
+        const firebaseUser = await signInWithFirebase(cleanIdentifier, password);
+
+        if (firebaseUser) {
+          onLoginSuccess(firebaseUser);
+          return;
+        }
+      }
+
       const user = existingUsers.find(candidate => matchesIdentifier(candidate) && candidate.password === password);
 
       if (!user) {
@@ -157,8 +223,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const { password: storedPassword, ...userWithoutPassword } = user;
       void storedPassword;
       onLoginSuccess(userWithoutPassword);
-    } catch {
-      setErrorMsg('Ocurrió un problema al procesar la cuenta. Inténtalo nuevamente.');
+    } catch (error) {
+      setErrorMsg(
+        error instanceof Error
+          ? error.message
+          : 'Ocurrió un problema al procesar la cuenta. Inténtalo nuevamente.'
+      );
     } finally {
       setLoading(false);
     }

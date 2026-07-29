@@ -47,9 +47,15 @@ export function getFirebaseAuth(): Auth {
   return cachedAuth;
 }
 
+/**
+ * Un proyecto de Firebase puede tener varias bases de Firestore. `(default)` es
+ * la estándar, pero este proyecto puede usar otra, así que es configurable.
+ */
+const databaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID || '(default)';
+
 export function getDb(): Firestore {
   if (!cachedDb) {
-    cachedDb = getFirestore(getFirebaseApp());
+    cachedDb = getFirestore(getFirebaseApp(), databaseId);
   }
   return cachedDb;
 }

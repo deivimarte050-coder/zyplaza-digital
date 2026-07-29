@@ -13,7 +13,8 @@ import {
   Plus,
   LogOut,
   LogIn,
-  LayoutDashboard
+  LayoutDashboard,
+  ShieldHalf
 } from 'lucide-react';
 
 interface UserProfileProps {
@@ -26,6 +27,7 @@ interface UserProfileProps {
   onLogout: () => void;
   onRequestAuth: () => void;
   onOpenSellerPanel?: () => void;
+  isAdmin?: boolean;
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
@@ -38,6 +40,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   onLogout,
   onRequestAuth,
   onOpenSellerPanel,
+  isAdmin = false,
 }) => {
   const [activeTab, setActiveTab] = useState<'my_items' | 'favorites' | 'security'>('my_items');
 
@@ -95,6 +98,16 @@ export const UserProfile: React.FC<UserProfileProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <a
+                href="/admin"
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-black font-extrabold text-xs hover:scale-105 transition-all shadow-md shadow-emerald-500/20 flex items-center gap-1.5 cursor-pointer"
+              >
+                <ShieldHalf className="w-4 h-4 text-black" />
+                <span>Administración</span>
+              </a>
+            )}
+
             {onOpenSellerPanel && (
               <button
                 onClick={onOpenSellerPanel}
