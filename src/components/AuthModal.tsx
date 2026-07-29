@@ -14,6 +14,8 @@ import {
   Camera,
   Upload
 } from 'lucide-react';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { getFirebaseAuth } from '../lib/firebase';
 import { UserProfileData } from '../types';
 import { readStorage, writeStorage } from '../utils/storage';
 
@@ -162,8 +164,43 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleGoogleLogin = () => {
-    setErrorMsg('El acceso con Google estará disponible cuando se configure Firebase. Usa tu correo o teléfono.');
+  const handleGoogleLogin = async () => {
+    setErrorMsg('');
+    setLoading(true);
+
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(getFirebaseAuth(), provider);
+      const fbUser = result.user;
+
+      const user: UserProfileData = {
+        id: fbUser.uid,
+        name: fbUser.displayName || 'Usuario',
+        email: fbUser.email || '',
+        city: 'San Pedro de Macorís',
+        avatar: fbUser.photoURL || undefined,
+        rating: 5.0,
+        salesCount: 0,
+        joinedDate: new Date().toLocaleDateString('es-DO', { month: 'long', year: 'numeric' }),
+        isVerified: true
+      };
+
+      onLoginSuccess(user);
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-requested') {
+        setErrorMsg('Cerraste la ventana de Google. Inténtalo de nuevo.');
+      } else if (code === 'auth/popup-blocked') {
+        setErrorMsg('El navegador bloqueó la ventana. Permite las ventanas emergentes.');
+      } else if (code === 'auth/network-request-failed') {
+        setErrorMsg('Sin conexión. Revisa tu internet.');
+      } else {
+        setErrorMsg('No se pudo iniciar sesión con Google. Inténtalo de nuevo.');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
