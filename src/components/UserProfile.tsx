@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Listing, UserProfileData } from '../types';
+import { Listing, Store, UserProfileData } from '../types';
 import { 
   User, 
   ShoppingBag, 
@@ -14,7 +14,9 @@ import {
   LogOut,
   LogIn,
   LayoutDashboard,
-  ShieldHalf
+  ShieldHalf,
+  Rocket,
+  BarChart3
 } from 'lucide-react';
 
 interface UserProfileProps {
@@ -28,6 +30,9 @@ interface UserProfileProps {
   onRequestAuth: () => void;
   onOpenSellerPanel?: () => void;
   isAdmin?: boolean;
+  isSeller?: boolean;
+  userStore?: Store | null;
+  onOpenCreateStore?: () => void;
 }
 
 export const UserProfile: React.FC<UserProfileProps> = ({
@@ -41,6 +46,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   onRequestAuth,
   onOpenSellerPanel,
   isAdmin = false,
+  isSeller = false,
+  userStore = null,
+  onOpenCreateStore,
 }) => {
   const [activeTab, setActiveTab] = useState<'my_items' | 'favorites' | 'security'>('my_items');
 
@@ -108,7 +116,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               </a>
             )}
 
-            {onOpenSellerPanel && (
+            {isSeller && onOpenSellerPanel && (
               <button
                 onClick={onOpenSellerPanel}
                 className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-extrabold text-xs hover:scale-105 transition-all shadow-md shadow-purple-500/20 flex items-center gap-1.5 cursor-pointer"
@@ -244,6 +252,68 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               <RotateCcw className="w-3.5 h-3.5" />
               <span>Restablecer</span>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tarjeta de vendedor: invita a crear tienda o muestra la tienda activa */}
+      {isSeller ? (
+        <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/60 via-[#101216] to-[#101216] p-5 sm:p-6 shadow-xl">
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-2xl">
+                🏪
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-white">Mi tienda</h3>
+                <p className="text-xs font-bold text-white truncate max-w-[180px]">{userStore?.name || 'Mi tienda'}</p>
+                <div className="mt-1 flex items-center gap-2 text-[11px] font-semibold">
+                  <span className="inline-flex items-center gap-1 text-emerald-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Activa
+                  </span>
+                  <span className="text-white/40">•</span>
+                  <span className="text-white/60">{userStore?.sellerLevel || 'Nuevo Vendedor'}</span>
+                </div>
+              </div>
+            </div>
+
+            {onOpenSellerPanel && (
+              <button
+                onClick={onOpenSellerPanel}
+                className="flex-shrink-0 flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2.5 text-xs font-extrabold text-black hover:scale-105 transition-all shadow-md shadow-emerald-500/25 cursor-pointer"
+              >
+                <BarChart3 className="w-4 h-4 text-black" />
+                <span>Ir al Panel de vendedor</span>
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="relative overflow-hidden rounded-3xl border border-[#FF6A00]/25 bg-gradient-to-br from-[#2B1608] via-[#18191C] to-[#18191C] p-5 sm:p-6 shadow-xl">
+          <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[#FF6A00]/15 blur-2xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3 max-w-sm">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#FF6A00] to-[#FF8A3D] text-2xl">
+                🏪
+              </div>
+              <div>
+                <h3 className="text-sm sm:text-base font-black text-white">Vende en Zyplaza</h3>
+                <p className="mt-0.5 text-xs text-white/60 leading-relaxed">
+                  ¿Tienes productos para vender? Crea tu tienda gratis y comienza a vender en pocos minutos.
+                </p>
+              </div>
+            </div>
+
+            {onOpenCreateStore && (
+              <button
+                onClick={onOpenCreateStore}
+                className="flex-shrink-0 flex items-center gap-2 rounded-full bg-gradient-to-r from-[#FF6A00] to-[#e85f00] px-4 py-2.5 text-xs font-extrabold text-black hover:scale-105 transition-all shadow-md shadow-[#FF6A00]/25 cursor-pointer"
+              >
+                <Rocket className="w-4 h-4 text-black" />
+                <span>Crear mi tienda</span>
+              </button>
+            )}
           </div>
         </div>
       )}

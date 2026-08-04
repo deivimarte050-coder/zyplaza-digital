@@ -14,7 +14,7 @@ import {
   Camera,
   Upload
 } from 'lucide-react';
-import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth';
 import { getFirebaseAuth, isFirebaseConfigured } from '../lib/firebase';
 import { UserProfileData } from '../types';
 import { readStorage, writeStorage } from '../utils/storage';
@@ -128,6 +128,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
+  /**
+   * Las cuentas locales (teléfono o correo no registrado en Firebase) no
+   * deben heredar una sesión de Firebase que haya quedado abierta en este
+   * navegador (por ejemplo, la de un administrador o una cuenta de Google
+   * usada antes). Sin esto, el rol de esa sesión vieja se filtraba al perfil
+   * local actual y mostraba accesos que no le corresponden.
+   */
+  const clearStaleFirebaseSession = async () => {
+    if (!isFirebaseConfigured) return;
+    if (!getFirebaseAuth().currentUser) return;
+
+    try {
+      await signOut(getFirebaseAuth());
+    } catch {
+      // Si falla el cierre de sesión no bloqueamos el login local.
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -196,6 +214,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           return;
         }
 
+        await clearStaleFirebaseSession();
         onLoginSuccess(newUser);
         return;
       }
@@ -219,6 +238,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           : 'El usuario o la contraseña no son correctos.');
         return;
       }
+
+      await clearStaleFirebaseSession();
 
       const { password: storedPassword, ...userWithoutPassword } = user;
       void storedPassword;

@@ -24,6 +24,7 @@ import { CreateListingModal } from './components/CreateListingModal';
 import { ChatDrawer } from './components/ChatDrawer';
 import { UserProfile } from './components/UserProfile';
 import { AuthModal } from './components/AuthModal';
+import { CreateStoreModal, CreateStoreInput } from './components/CreateStoreModal';
 import { SellerPanel } from './components/seller/SellerPanel';
 import { signOut } from 'firebase/auth';
 import { readStorage, writeStorage } from './utils/storage';
@@ -60,7 +61,7 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<UserProfileData | null>(() =>
     readStorage<UserProfileData | null>('zyplaza_user', null)
   );
-  const isAdmin = useAdminClaim();
+  const isAdmin = useAdminClaim(currentUser?.id);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authReason, setAuthReason] = useState<string>('');
   const [pendingAuthAction, setPendingAuthAction] = useState<(() => void) | null>(null);
@@ -115,7 +116,9 @@ export default function App() {
     readStorage<Listing[]>('multiplaza_listings', INITIAL_LISTINGS)
   );
 
-  const [stores] = useState<Store[]>(MOCK_STORES);
+  const [stores, setStores] = useState<Store[]>(() =>
+    readStorage<Store[]>('multiplaza_stores', MOCK_STORES)
+  );
 
   const [conversations, setConversations] = useState<Conversation[]>(() =>
     readStorage<Conversation[]>('multiplaza_conversations', INITIAL_CONVERSATIONS)
@@ -169,11 +172,17 @@ export default function App() {
   const [showChatModal, setShowChatModal] = useState<boolean>(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showSellerPanel, setShowSellerPanel] = useState<boolean>(false);
+  const [showCreateStore, setShowCreateStore] = useState<boolean>(false);
+  const [storeToast, setStoreToast] = useState<string>('');
 
   // Sync to localStorage
   useEffect(() => {
     writeStorage('multiplaza_listings', listings);
   }, [listings]);
+
+  useEffect(() => {
+    writeStorage('multiplaza_stores', stores);
+  }, [stores]);
 
   useEffect(() => {
     writeStorage('multiplaza_conversations', conversations);
@@ -186,6 +195,77 @@ export default function App() {
   useEffect(() => {
     writeStorage('multiplaza_favorites', favorites);
   }, [favorites]);
+
+  const isSeller = currentUser?.role === 'seller';
+  const userStore = stores.find(s => s.id === currentUser?.storeId) ?? null;
+
+  // Si el botón "Vender" se pulsó sin sesión, al terminar el login decide
+  // automáticamente si abrir "Crear mi tienda" o el Panel de vendedor,
+  // según el rol real de la cuenta con la que se acaba de entrar.
+  const [pendingVender, setPendingVender] = useState(false);
+
+  useEffect(() => {
+    if (!pendingVender || !currentUser) return;
+    setPendingVender(false);
+    if (currentUser.role === 'seller') {
+      setShowSellerPanel(true);
+    } else {
+      setShowCreateStore(true);
+    }
+  }, [pendingVender, currentUser]);
+
+  /** Botón "Vender": abre crear tienda si aún es comprador, o el panel si ya es vendedor. */
+  const handleVenderClick = () => {
+    if (!currentUser) {
+      setPendingVender(true);
+      handleRequestAuth('para crear tu tienda y vender en Zyplaza');
+      return;
+    }
+
+    if (isSeller) {
+      setShowSellerPanel(true);
+    } else {
+      setShowCreateStore(true);
+    }
+  };
+
+  const handleCreateStore = (input: CreateStoreInput) => {
+    if (!currentUser) return;
+
+    const storeId = 'store_' + Date.now();
+    const newStore: Store = {
+      id: storeId,
+      name: input.name,
+      slug: input.name.toLowerCase().trim().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''),
+      logo: input.logo || 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=300&q=80',
+      coverImage: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80',
+      category: 'General',
+      rating: 5.0,
+      reviewsCount: 0,
+      city: currentUser.city,
+      address: currentUser.city,
+      verified: false,
+      responseTime: '~30 minutos',
+      openingHours: 'Todos los días',
+      followersCount: 0,
+      totalListings: 0,
+      description: input.description,
+      ownerId: currentUser.id,
+      whatsapp: input.whatsapp,
+      status: 'active',
+      sellerLevel: 'Nuevo Vendedor',
+      createdAt: new Date().toISOString(),
+    };
+
+    setStores(prev => [...prev, newStore]);
+
+    const updatedUser: UserProfileData = { ...currentUser, role: 'seller', storeId };
+    setCurrentUser(updatedUser);
+    writeStorage('zyplaza_user', updatedUser);
+
+    setStoreToast('¡Tu tienda ha sido creada con éxito!');
+    window.setTimeout(() => setStoreToast(''), 4000);
+  };
 
   const handleToggleFavorite = (id: string) => {
     setFavorites(prev =>
@@ -349,6 +429,8 @@ export default function App() {
                 setShowCreateListing(true);
               }
             }}
+            isSeller={isSeller}
+            onOpenCreateStore={handleVenderClick}
           />
         )}
 
@@ -382,6 +464,9 @@ export default function App() {
             onRequestAuth={handleRequestAuth}
             onOpenSellerPanel={() => setShowSellerPanel(true)}
             isAdmin={isAdmin}
+            isSeller={isSeller}
+            userStore={userStore}
+            onOpenCreateStore={handleVenderClick}
           />
         )}
       </main>
@@ -409,13 +494,7 @@ export default function App() {
         </button>
 
         <button
-          onClick={() => {
-            if (!currentUser) {
-              handleRequestAuth('para publicar un artículo', () => setShowCreateListing(true));
-            } else {
-              setShowCreateListing(true);
-            }
-          }}
+          onClick={handleVenderClick}
           className="flex flex-col items-center gap-1 text-[11px] font-bold text-[#FF6A00] transition-all cursor-pointer hover:scale-105"
         >
           <div className="w-10 h-10 rounded-full bg-[#FF6A00] text-black flex items-center justify-center -mt-4 border-4 border-[#0A0A0A] shadow-lg shadow-[#FF6A00]/30 font-black">
@@ -527,6 +606,21 @@ export default function App() {
 
       {showSellerPanel && (
         <SellerPanel onClose={() => setShowSellerPanel(false)} />
+      )}
+
+      {showCreateStore && (
+        <CreateStoreModal
+          isOpen={showCreateStore}
+          onClose={() => setShowCreateStore(false)}
+          onCreateStore={handleCreateStore}
+        />
+      )}
+
+      {storeToast && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-full bg-emerald-500 text-black text-xs font-extrabold shadow-lg shadow-emerald-500/30 animate-fade-in flex items-center gap-2">
+          <span>✅</span>
+          <span>{storeToast}</span>
+        </div>
       )}
 
       {/* City Selector Modal */}

@@ -45,6 +45,11 @@ export interface Store {
   followersCount: number;
   totalListings: number;
   description: string;
+  ownerId?: string;
+  whatsapp?: string;
+  status?: 'active' | 'pending' | 'suspended';
+  sellerLevel?: string;
+  createdAt?: string;
 }
 
 export interface ChatMessage {
@@ -98,6 +103,8 @@ export interface UserProfileData {
   salesCount?: number;
   joinedDate?: string;
   isVerified?: boolean;
+  role?: 'buyer' | 'seller';
+  storeId?: string;
 }
 
 export interface Review {

@@ -34,6 +34,8 @@ interface HomeFeedProps {
   favorites: string[];
   onToggleFavorite: (id: string) => void;
   onOpenCreateListing: () => void;
+  isSeller?: boolean;
+  onOpenCreateStore?: () => void;
 }
 
 export const HomeFeed: React.FC<HomeFeedProps> = ({
@@ -46,6 +48,8 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
   favorites,
   onToggleFavorite,
   onOpenCreateListing,
+  isSeller = false,
+  onOpenCreateStore,
 }) => {
   // Flash deal active countdown state
   const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 13, seconds: 44 });
@@ -270,35 +274,39 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
         </div>
       </section>
 
-      {/* 5. "¿Tienes un negocio?" Banner */}
-      <section className="max-w-7xl mx-auto px-3.5 sm:px-4 pt-2">
-        <div className="bg-[#18191C] border border-white/10 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-lg">
-          <div className="flex items-center gap-3">
-            {/* Storefront 3D graphic */}
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-[#FF6A00] to-[#FF8A3D] p-0.5 flex-shrink-0 flex items-center justify-center shadow-md">
-              <div className="w-full h-full bg-[#18191C] rounded-[10px] flex items-center justify-center">
-                <span className="text-xl">🏪</span>
+      {/* 5. Banner de conversión a vendedor (solo para compradores) */}
+      {!isSeller && onOpenCreateStore && (
+        <section className="max-w-7xl mx-auto px-3.5 sm:px-4 pt-2">
+          <div className="relative overflow-hidden bg-gradient-to-r from-[#2B1608] via-[#18191C] to-[#18191C] border border-[#FF6A00]/20 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-lg">
+            <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-[#FF6A00]/15 blur-2xl pointer-events-none" />
+
+            <div className="relative z-10 flex items-center gap-3">
+              {/* Storefront 3D graphic */}
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-tr from-[#FF6A00] to-[#FF8A3D] p-0.5 flex-shrink-0 flex items-center justify-center shadow-md">
+                <div className="w-full h-full bg-[#18191C] rounded-[10px] flex items-center justify-center">
+                  <span className="text-xl">🏪</span>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-xs sm:text-sm font-bold text-white">
+                  ¿Quieres vender en Zyplaza?
+                </h3>
+                <p className="text-[10px] sm:text-xs text-white/60 leading-tight">
+                  Crea tu tienda gratis y llega a miles de compradores.
+                </p>
               </div>
             </div>
 
-            <div>
-              <h3 className="text-xs sm:text-sm font-bold text-white">
-                ¿Tienes un negocio?
-              </h3>
-              <p className="text-[10px] sm:text-xs text-white/60 leading-tight">
-                Únete a Zyplaza <span className="text-[#FF8A3D] font-bold">LOCAL</span> y haz crecer tus ventas hoy mismo.
-              </p>
-            </div>
+            <button
+              onClick={onOpenCreateStore}
+              className="relative z-10 flex-shrink-0 bg-[#FF6A00] text-black font-extrabold text-[11px] sm:text-xs px-3.5 py-2 rounded-xl hover:bg-[#ff7b1a] transition-all cursor-pointer shadow-md"
+            >
+              Crear mi tienda
+            </button>
           </div>
-
-          <button
-            onClick={onOpenCreateListing}
-            className="flex-shrink-0 bg-[#FF6A00] text-black font-extrabold text-[11px] sm:text-xs px-3.5 py-2 rounded-xl hover:bg-[#ff7b1a] transition-all cursor-pointer shadow-md"
-          >
-            Publicar mi negocio
-          </button>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 6. All Listings Grid */}
       <section className="max-w-7xl mx-auto px-3.5 sm:px-4 pt-3">
