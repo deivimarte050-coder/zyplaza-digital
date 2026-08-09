@@ -20,6 +20,7 @@ interface ChatDrawerProps {
   onSelectConversation: (id: string) => void;
   onSendMessage: (conversationId: string, text: string, isOffer?: boolean, offerAmount?: number) => void;
   onClose: () => void;
+  currentUserId: string;
 }
 
 export const ChatDrawer: React.FC<ChatDrawerProps> = ({
@@ -29,6 +30,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
   onSelectConversation,
   onSendMessage,
   onClose,
+  currentUserId,
 }) => {
   const [inputText, setInputText] = useState('');
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -73,7 +75,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           lastMessage: lastMsg,
           listingTitle: activeConv.listingTitle,
           listingPrice: activeConv.listingPrice,
-          userRole: 'buyer',
+          userRole: activeConv.buyerId === currentUserId ? 'buyer' : 'seller',
         }),
       });
       const data = await res.json();
@@ -103,35 +105,48 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             </button>
           </div>
 
-          <div className="overflow-y-auto flex-1 divide-y divide-white/5">
-            {conversations.map(conv => (
-              <div
-                key={conv.id}
-                onClick={() => onSelectConversation(conv.id)}
-                className={`p-3.5 flex items-center gap-3 cursor-pointer transition-colors ${
-                  activeConv?.id === conv.id ? 'bg-[#FF6A00]/15 border-l-4 border-[#FF6A00]' : 'hover:bg-white/5'
-                }`}
-              >
-                <img
-                  src={conv.sellerAvatar}
-                  alt={conv.sellerName}
-                  className="w-11 h-11 rounded-full object-cover border border-white/10 flex-shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white truncate flex items-center gap-1">
-                      {conv.sellerName}
-                      {conv.isVerifiedSeller && <BadgeCheck className="w-3.5 h-3.5 text-[#FF8A3D]" />}
-                    </span>
-                    <span className="text-[10px] text-white/40">{conv.lastMessageTime}</span>
+          <div className="flex-1 overflow-y-auto">
+            {conversations.map(conv => {
+              const iAmBuyer = conv.buyerId === currentUserId;
+              const otherName = iAmBuyer ? conv.sellerName : conv.buyerName;
+              const otherAvatar = iAmBuyer ? conv.sellerAvatar : conv.buyerAvatar;
+              const myUnread = conv.unreadCounts[currentUserId] ?? 0;
+
+              return (
+                <div
+                  key={conv.id}
+                  onClick={() => onSelectConversation(conv.id)}
+                  className={`flex items-center gap-2.5 p-3 cursor-pointer border-b border-white/5 hover:bg-white/5 transition-all ${
+                    conv.id === activeConversationId ? 'bg-white/5 border-l-2 border-l-[#FF6A00]' : ''
+                  }`}
+                >
+                  <div className="relative flex-shrink-0">
+                    <img src={otherAvatar} alt={otherName} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+                    {myUnread > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FF6A00] text-black text-[9px] font-black flex items-center justify-center">
+                        {myUnread}
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-white/60 truncate mt-0.5">{conv.lastMessage}</p>
-                  <p className="text-[10px] text-[#FF8A3D] font-semibold truncate mt-0.5">
-                    {conv.listingTitle}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline">
+                      <p className="text-xs font-bold text-white truncate flex items-center gap-1">
+                        {otherName}
+                        {iAmBuyer && conv.isVerifiedSeller && <ShieldAlert className="w-3 h-3 text-[#FF8A3D] flex-shrink-0" />}
+                      </p>
+                      <span className="text-[9px] text-white/40 flex-shrink-0 ml-1">{conv.lastMessageTime}</span>
+                    </div>
+                    <p className="text-[10px] text-white/60 truncate mt-0.5">{conv.listingTitle}</p>
+                    <p className="text-[11px] text-white/40 truncate mt-0.5">{conv.lastMessage}</p>
+                  </div>
                 </div>
+              );
+            })}
+            {conversations.length === 0 && (
+              <div className="p-6 text-center text-white/30 text-xs">
+                No tienes conversaciones abiertas.
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -147,17 +162,21 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <img
-                  src={activeConv.sellerAvatar}
-                  alt={activeConv.sellerName}
-                  className="w-9 h-9 rounded-full object-cover border border-[#FF6A00]"
-                />
-                <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1">
-                    {activeConv.sellerName}
-                    {activeConv.isVerifiedSeller && <BadgeCheck className="w-3.5 h-3.5 text-[#FF8A3D]" />}
-                  </h3>
-                  <span className="text-[10px] text-[#2ED573]">● En línea en San Pedro</span>
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={activeConv.buyerId === currentUserId ? activeConv.sellerAvatar : activeConv.buyerAvatar}
+                    alt=""
+                    className="w-9 h-9 rounded-full object-cover border border-white/10"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white truncate flex items-center gap-1">
+                    {activeConv.buyerId === currentUserId ? activeConv.sellerName : activeConv.buyerName}
+                    {activeConv.buyerId === currentUserId && activeConv.isVerifiedSeller && (
+                      <ShieldAlert className="w-3.5 h-3.5 text-[#FF8A3D] flex-shrink-0" />
+                    )}
+                  </p>
+                  <p className="text-[10px] text-white/50 truncate">{activeConv.listingTitle}</p>
                 </div>
               </div>
 
@@ -192,7 +211,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
             {/* Chat Messages Feed */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {activeMessages.map((m) => {
-                const isMe = m.sender === 'user';
+                const isMe = m.senderId === currentUserId;
                 return (
                   <div
                     key={m.id}
@@ -285,7 +304,7 @@ export const ChatDrawer: React.FC<ChatDrawerProps> = ({
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center p-8 text-center text-white/40">
-            <p className="text-xs sm:text-sm">Selecciona una conversación para chatear con el vendedor.</p>
+            <p className="text-xs sm:text-sm">Selecciona una conversación para ver los mensajes.</p>
           </div>
         )}
       </div>

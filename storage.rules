@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.role == 'admin';
+    }
+
+    // Avatares, logos/portadas de tiendas e imágenes de productos.
+    // Lectura pública; escritura solo autenticada, solo imágenes de máx. 5 MB
+    // (el cliente ya comprime antes de subir, queda como red de seguridad).
+    match /{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && isImage()
+        && request.resource.size < 5 * 1024 * 1024;
+      allow delete: if isAdmin();
+    }
+  }
+}

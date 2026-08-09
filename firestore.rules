@@ -22,45 +22,88 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/stores/$(storeId)).data.ownerId == request.auth.uid;
     }
 
-    // Perfiles: cada quien lee y edita el suyo; el rol y el estado solo los cambia un admin.
+    // Perfiles: cada quien lee y edita el suyo; el estado solo lo cambia un admin.
+    // Un usuario puede ascender a vendedor ('seller') si es dueño de la tienda que vincula.
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId)
-        && request.resource.data.role == 'user'
+        && request.resource.data.role in ['buyer', 'seller']
         && request.resource.data.status == 'active';
       allow update: if isAdmin()
         || (isOwner(userId)
-            && request.resource.data.role == resource.data.role
-            && request.resource.data.status == resource.data.status);
+            && request.resource.data.status == resource.data.status
+            && (request.resource.data.role == resource.data.role
+                || (request.resource.data.role == 'seller'
+                    && resource.data.role == 'buyer'
+                    && storeBelongsToCaller(request.resource.data.storeId))));
       allow delete: if isAdmin();
     }
 
-    // Tiendas: visibles para todos si están aprobadas; su dueño las edita salvo el estado.
+    // Tiendas: lectura pública si están activas; el dueño las edita salvo 'verified'.
+    // Cualquier usuario autenticado puede seguir/dejar de seguir (solo followersCount).
     match /stores/{storeId} {
-      allow read: if resource.data.status == 'approved' || isAdmin() || isOwner(resource.data.ownerId);
-      allow create: if signedIn()
-        && request.resource.data.ownerId == request.auth.uid
-        && request.resource.data.status == 'pending';
-      allow update: if isAdmin()
-        || (isOwner(resource.data.ownerId)
-            && request.resource.data.status == resource.data.status);
-      allow delete: if isAdmin();
-    }
-
-    // Productos: públicos si están aprobados y visibles.
-    match /products/{productId} {
-      allow read: if (resource.data.status == 'approved' && resource.data.hidden == false)
+      allow read: if resource.data.status == 'active'
         || isAdmin()
         || isOwner(resource.data.ownerId);
       allow create: if signedIn()
         && request.resource.data.ownerId == request.auth.uid
-        && request.resource.data.status == 'pending'
-        && storeBelongsToCaller(request.resource.data.storeId);
+        && request.resource.data.status == 'active';
       allow update: if isAdmin()
         || (isOwner(resource.data.ownerId)
-            && request.resource.data.status == resource.data.status
-            && request.resource.data.featured == resource.data.featured);
+            && request.resource.data.verified == resource.data.verified)
+        || (signedIn()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['followersCount']));
       allow delete: if isAdmin() || isOwner(resource.data.ownerId);
+    }
+
+    // Productos: lectura pública de los activos; el vendedor gestiona los suyos.
+    match /products/{productId} {
+      allow read: if resource.data.status == 'active'
+        || isAdmin()
+        || isOwner(resource.data.sellerId);
+      allow create: if signedIn()
+        && request.resource.data.sellerId == request.auth.uid
+        && request.resource.data.status == 'active'
+        && request.resource.data.price > 0
+        && request.resource.data.images.size() >= 1
+        && (!request.resource.data.keys().hasAny(['storeId'])
+            || request.resource.data.storeId == ''
+            || storeBelongsToCaller(request.resource.data.storeId));
+      allow update: if isAdmin() || isOwner(resource.data.sellerId);
+      allow delete: if isAdmin() || isOwner(resource.data.sellerId);
+    }
+
+    // Reseñas: lectura pública; el autor crea las suyas con calificación válida.
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.rating >= 1
+        && request.resource.data.rating <= 5;
+      allow delete: if isAdmin() || isOwner(resource.data.authorId);
+      allow update: if isAdmin();
+    }
+
+    // Conversaciones y mensajes: solo participantes (y admin).
+    function isParticipant(conv) {
+      return signedIn() && request.auth.uid in conv.data.participants;
+    }
+
+    match /conversations/{convId} {
+      allow read: if isAdmin() || isParticipant(resource);
+      allow create: if signedIn()
+        && request.resource.data.buyerId == request.auth.uid
+        && request.auth.uid in request.resource.data.participants;
+      allow update: if isAdmin() || isParticipant(resource);
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isAdmin()
+          || isParticipant(get(/databases/$(database)/documents/conversations/$(convId)));
+        allow create: if isParticipant(get(/databases/$(database)/documents/conversations/$(convId)))
+          && request.resource.data.senderId == request.auth.uid;
+        allow update, delete: if isAdmin();
+      }
     }
 
     // Pedidos: los ve el comprador, el vendedor dueño de la tienda y el admin.

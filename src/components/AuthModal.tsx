@@ -1,25 +1,27 @@
 import React, { useState, useRef } from 'react';
-import { 
-  X, 
-  User, 
-  Lock, 
-  Phone, 
-  Mail, 
-  MessageSquare, 
-  ShieldCheck, 
-  CheckCircle, 
+import {
+  X,
+  User,
+  Lock,
+  Phone,
+  Mail,
+  ShieldCheck,
   Sparkles,
   ArrowRight,
-  LogOut,
   Camera,
   Upload
 } from 'lucide-react';
-import { GoogleAuthProvider, signInWithEmailAndPassword, signInWithPopup, signOut } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  updateProfile
+} from 'firebase/auth';
 import { getFirebaseAuth, isFirebaseConfigured } from '../lib/firebase';
+import { createUserProfile, getUserProfile } from '../services/firestore';
+import { uploadImage, readFileAsDataUrl } from '../services/imageUpload';
 import { UserProfileData } from '../types';
-import { readStorage, writeStorage } from '../utils/storage';
-
-type StoredUser = UserProfileData & { password: string };
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -37,19 +39,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   titleActionReason = 'para contactar tiendas, enviar mensajes o publicar artículos'
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
-  const [method, setMethod] = useState<'phone' | 'email'>('phone');
-  
+
   // Form State
   const [name, setName] = useState('');
-  const [identifier, setIdentifier] = useState(''); // phone or email
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [city, setCity] = useState('San Pedro de Macorís');
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
-  const [avatar, setAvatar] = useState<string>('');
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setErrorMsg('');
 
@@ -67,83 +70,62 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => setAvatar(typeof reader.result === 'string' ? reader.result : '');
-    reader.onerror = () => setErrorMsg('No se pudo leer la foto. Intenta con otra imagen.');
-    reader.readAsDataURL(file);
-  };
-
-  /**
-   * Intenta iniciar sesión contra Firebase. Devuelve el perfil si la cuenta
-   * existe allí, o null para que se use el registro local del navegador.
-   */
-  const signInWithFirebase = async (
-    email: string,
-    plainPassword: string
-  ): Promise<UserProfileData | null> => {
-    if (!isFirebaseConfigured) return null;
-
+    setAvatarFile(file);
     try {
-      const credential = await signInWithEmailAndPassword(getFirebaseAuth(), email, plainPassword);
-      const fbUser = credential.user;
-
-      return {
-        id: fbUser.uid,
-        name: fbUser.displayName || email.split('@')[0],
-        email: fbUser.email || email,
-        city,
-        avatar: fbUser.photoURL || undefined,
-        rating: 5.0,
-        salesCount: 0,
-        joinedDate: new Date().toLocaleDateString('es-DO', { month: 'long', year: 'numeric' }),
-        isVerified: fbUser.emailVerified
-      };
-    } catch (error) {
-      const code = (error as { code?: string }).code;
-
-      // Estos códigos significan "esta cuenta no está en Firebase", así que se
-      // sigue con el registro local. Cualquier otro fallo sí debe avisarse.
-      const notInFirebase = [
-        'auth/user-not-found',
-        'auth/invalid-credential',
-        'auth/invalid-email',
-        'auth/wrong-password'
-      ];
-
-      if (notInFirebase.includes(code ?? '')) return null;
-
-      if (code === 'auth/too-many-requests') {
-        throw new Error('Demasiados intentos fallidos. Espera unos minutos.');
-      }
-
-      if (code === 'auth/network-request-failed') {
-        throw new Error('Sin conexión. Revisa tu internet.');
-      }
-
-      if (code === 'auth/user-disabled') {
-        throw new Error('Esta cuenta está suspendida. Contacta al administrador.');
-      }
-
-      throw new Error('No se pudo verificar la cuenta. Inténtalo de nuevo.');
-    }
-  };
-
-  /**
-   * Las cuentas locales (teléfono o correo no registrado en Firebase) no
-   * deben heredar una sesión de Firebase que haya quedado abierta en este
-   * navegador (por ejemplo, la de un administrador o una cuenta de Google
-   * usada antes). Sin esto, el rol de esa sesión vieja se filtraba al perfil
-   * local actual y mostraba accesos que no le corresponden.
-   */
-  const clearStaleFirebaseSession = async () => {
-    if (!isFirebaseConfigured) return;
-    if (!getFirebaseAuth().currentUser) return;
-
-    try {
-      await signOut(getFirebaseAuth());
+      setAvatarPreview(await readFileAsDataUrl(file));
     } catch {
-      // Si falla el cierre de sesión no bloqueamos el login local.
+      setErrorMsg('No se pudo leer la foto. Intenta con otra imagen.');
     }
+  };
+
+  const mapAuthError = (error: unknown): string => {
+    const code = (error as { code?: string }).code;
+    switch (code) {
+      case 'auth/email-already-in-use':
+        return 'Este correo ya está registrado. Inicia sesión con tus datos.';
+      case 'auth/invalid-credential':
+      case 'auth/wrong-password':
+      case 'auth/user-not-found':
+        return 'El correo o la contraseña no son correctos.';
+      case 'auth/invalid-email':
+        return 'Ingresa un correo electrónico válido.';
+      case 'auth/weak-password':
+        return 'La contraseña debe tener al menos 6 caracteres.';
+      case 'auth/too-many-requests':
+        return 'Demasiados intentos fallidos. Espera unos minutos.';
+      case 'auth/network-request-failed':
+        return 'Sin conexión. Revisa tu internet.';
+      case 'auth/user-disabled':
+        return 'Esta cuenta está suspendida. Contacta al administrador.';
+      default:
+        return 'No se pudo procesar la cuenta. Inténtalo de nuevo.';
+    }
+  };
+
+  /** Carga el perfil de Firestore o lo crea si es la primera vez de la cuenta. */
+  const loadOrCreateProfile = async (
+    uid: string,
+    defaults: Partial<UserProfileData>
+  ): Promise<UserProfileData> => {
+    const existing = await getUserProfile(uid);
+    if (existing) return existing;
+
+    const profile: UserProfileData = {
+      id: uid,
+      name: defaults.name || 'Usuario',
+      email: defaults.email,
+      phone: defaults.phone,
+      city: defaults.city || 'San Pedro de Macorís',
+      avatar: defaults.avatar,
+      rating: 5.0,
+      salesCount: 0,
+      joinedDate: new Date().toLocaleDateString('es-DO', { month: 'long', year: 'numeric' }),
+      isVerified: defaults.isVerified ?? false,
+      role: 'buyer',
+      favorites: [],
+    };
+    await createUserProfile(profile);
+    return profile;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,17 +133,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setErrorMsg('');
 
     const cleanName = name.trim().replace(/\s+/g, ' ');
-    const cleanIdentifier = method === 'email'
-      ? identifier.trim().toLowerCase()
-      : identifier.replace(/\D/g, '');
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPhone = phone.replace(/\D/g, '');
 
-    if (!cleanIdentifier) {
-      setErrorMsg(method === 'phone' ? 'Ingresa tu número de WhatsApp' : 'Ingresa tu correo electrónico');
-      return;
-    }
-
-    if (method === 'phone' && cleanIdentifier.length < 10) {
-      setErrorMsg('Ingresa un número de teléfono válido con al menos 10 dígitos.');
+    if (!cleanEmail) {
+      setErrorMsg('Ingresa tu correo electrónico');
       return;
     }
 
@@ -175,81 +151,55 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       return;
     }
 
+    if (!isFirebaseConfigured) {
+      setErrorMsg('Firebase no está configurado. Revisa las variables de entorno.');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const storedUsers = readStorage<StoredUser[]>('zyplaza_users', []);
-      const existingUsers = Array.isArray(storedUsers) ? storedUsers : [];
-      const matchesIdentifier = (user: StoredUser) => {
-        const storedIdentifier = method === 'email'
-          ? (user.email || '').trim().toLowerCase()
-          : (user.phone || '').replace(/\D/g, '');
-        return storedIdentifier === cleanIdentifier;
-      };
+      const auth = getFirebaseAuth();
 
       if (mode === 'register') {
-        const userExists = existingUsers.some(matchesIdentifier);
+        const credential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+        const fbUser = credential.user;
 
-        if (userExists) {
-          setErrorMsg('Este usuario ya está registrado. Inicia sesión con tus datos.');
-          return;
+        let avatarUrl = '';
+        if (avatarFile) {
+          avatarUrl = await uploadImage(avatarFile, `users/${fbUser.uid}/avatar-${Date.now()}.jpg`);
         }
 
-        const newUser: UserProfileData = {
-          id: 'usr_' + Date.now(),
+        await updateProfile(fbUser, {
+          displayName: cleanName,
+          photoURL: avatarUrl || null,
+        });
+
+        const profile = await loadOrCreateProfile(fbUser.uid, {
           name: cleanName,
-          email: method === 'email' ? cleanIdentifier : '',
-          phone: method === 'phone' ? cleanIdentifier : '',
+          email: cleanEmail,
+          phone: cleanPhone || undefined,
           city,
-          avatar: avatar || undefined,
-          rating: 5.0,
-          salesCount: 0,
-          joinedDate: new Date().toLocaleDateString('es-DO', { month: 'long', year: 'numeric' }),
-          isVerified: false
-        };
+          avatar: avatarUrl || undefined,
+          isVerified: false,
+        });
 
-        const saved = writeStorage('zyplaza_users', [...existingUsers, { ...newUser, password }]);
-        if (!saved) {
-          setErrorMsg('No se pudo guardar la cuenta. Prueba con una foto más pequeña.');
-          return;
-        }
-
-        await clearStaleFirebaseSession();
-        onLoginSuccess(newUser);
+        onLoginSuccess(profile);
         return;
       }
 
-      // Las cuentas de correo pueden vivir en Firebase (como la del
-      // administrador), así que se comprueba allí antes del registro local.
-      if (method === 'email') {
-        const firebaseUser = await signInWithFirebase(cleanIdentifier, password);
+      const credential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+      const fbUser = credential.user;
+      const profile = await loadOrCreateProfile(fbUser.uid, {
+        name: fbUser.displayName || cleanEmail.split('@')[0],
+        email: fbUser.email || cleanEmail,
+        avatar: fbUser.photoURL || undefined,
+        isVerified: fbUser.emailVerified,
+      });
 
-        if (firebaseUser) {
-          onLoginSuccess(firebaseUser);
-          return;
-        }
-      }
-
-      const user = existingUsers.find(candidate => matchesIdentifier(candidate) && candidate.password === password);
-
-      if (!user) {
-        setErrorMsg(existingUsers.length === 0
-          ? 'No hay cuentas registradas. Selecciona Registrarse para crear una.'
-          : 'El usuario o la contraseña no son correctos.');
-        return;
-      }
-
-      await clearStaleFirebaseSession();
-
-      const { password: storedPassword, ...userWithoutPassword } = user;
-      void storedPassword;
-      onLoginSuccess(userWithoutPassword);
+      onLoginSuccess(profile);
     } catch (error) {
-      setErrorMsg(
-        error instanceof Error
-          ? error.message
-          : 'Ocurrió un problema al procesar la cuenta. Inténtalo nuevamente.'
-      );
+      setErrorMsg(mapAuthError(error));
     } finally {
       setLoading(false);
     }
@@ -264,19 +214,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       const result = await signInWithPopup(getFirebaseAuth(), provider);
       const fbUser = result.user;
 
-      const user: UserProfileData = {
-        id: fbUser.uid,
+      const profile = await loadOrCreateProfile(fbUser.uid, {
         name: fbUser.displayName || 'Usuario',
         email: fbUser.email || '',
-        city: 'San Pedro de Macorís',
         avatar: fbUser.photoURL || undefined,
-        rating: 5.0,
-        salesCount: 0,
-        joinedDate: new Date().toLocaleDateString('es-DO', { month: 'long', year: 'numeric' }),
-        isVerified: true
-      };
+        isVerified: true,
+      });
 
-      onLoginSuccess(user);
+      onLoginSuccess(profile);
     } catch (error) {
       const code = (error as { code?: string }).code;
 
@@ -401,8 +346,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     onClick={() => fileInputRef.current?.click()}
                     className="w-16 h-16 rounded-full bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:border-[#FF8A3D] transition-all overflow-hidden"
                   >
-                    {avatar ? (
-                      <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    {avatarPreview ? (
+                      <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <Camera className="w-6 h-6 text-white/40" />
                     )}
@@ -430,38 +375,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </>
           )}
 
-          {/* Method selector (Phone vs Email) */}
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="font-bold text-white/80">
-              {method === 'phone' ? 'Teléfono / WhatsApp' : 'Correo Electrónico'}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setMethod(method === 'phone' ? 'email' : 'phone');
-                setIdentifier('');
-              }}
-              className="text-[#FF8A3D] font-semibold hover:underline"
-            >
-              {method === 'phone' ? 'Usar Correo' : 'Usar WhatsApp'}
-            </button>
+          {/* Email */}
+          <div className="space-y-1">
+            <label className="text-[11px] font-bold text-white/80">Correo Electrónico</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+              <input
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="tu@correo.com"
+                className="w-full bg-white/5 border border-white/10 rounded-2xl pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#FF8A3D]"
+              />
+            </div>
           </div>
 
-          <div className="relative">
-            {method === 'phone' ? (
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-            ) : (
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-            )}
-            <input
-              type={method === 'phone' ? 'tel' : 'email'}
-              autoComplete={method === 'phone' ? 'tel' : 'email'}
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder={method === 'phone' ? 'Ej: 809-555-0199' : 'tu@correo.com'}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#FF8A3D]"
-            />
-          </div>
+          {/* WhatsApp opcional al registrarse */}
+          {mode === 'register' && (
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-white/80">WhatsApp (Opcional)</label>
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <input
+                  type="tel"
+                  autoComplete="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Ej: 809-555-0199"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#FF8A3D]"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Password */}
           <div className="space-y-1">

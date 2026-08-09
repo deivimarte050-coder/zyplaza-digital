@@ -1,431 +1,214 @@
-import React, { useState, useRef } from 'react';
-import { 
-  Package, 
-  Plus, 
-  Search, 
-  Filter, 
-  Edit, 
-  Trash2, 
-  Copy, 
-  Eye, 
-  EyeOff, 
-  Star,
-  MoreVertical,
-  Camera,
-  Upload,
+import React, { useState } from 'react';
+import {
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  EyeOff,
+  Eye,
+  Package,
   X,
-  Save,
-  AlertCircle,
-  Check,
-  Calendar,
-  Tag,
-  Barcode,
-  Box,
-  Ruler,
-  Scale,
-  Shield
+  AlertTriangle,
 } from 'lucide-react';
+import { Listing } from '../../types';
+import { CreateListingModal, ListingFormInput } from '../CreateListingModal';
 
 interface SellerProductsProps {
   darkMode: boolean;
+  products: Listing[];
+  onSubmitListing: (input: ListingFormInput, editingId?: string) => Promise<void>;
+  onDeleteListing: (listing: Listing) => void;
+  onToggleStatus: (listing: Listing) => void;
 }
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  offerPrice?: number;
-  category: string;
-  stock: number;
-  minStock: number;
-  sku: string;
-  barcode?: string;
-  brand: string;
-  status: 'active' | 'inactive' | 'out_of_stock';
-  featured: boolean;
-  images: string[];
-  video?: string;
-  variants: ProductVariant[];
-  weight?: number;
-  dimensions?: string;
-  warranty?: string;
-  tags: string[];
-  createdAt: string;
-}
-
-interface ProductVariant {
-  id: string;
-  name: string;
-  type: 'color' | 'size' | 'capacity' | 'other';
-  values: string[];
-}
-
-export const SellerProducts: React.FC<SellerProductsProps> = ({ darkMode }) => {
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: '1',
-      name: 'iPhone 15 Pro Max 256GB',
-      price: 65000,
-      originalPrice: 70000,
-      offerPrice: 62000,
-      category: 'Electrónica',
-      stock: 15,
-      minStock: 5,
-      sku: 'IP15PM-256',
-      barcode: '1234567890123',
-      brand: 'Apple',
-      status: 'active',
-      featured: true,
-      images: ['https://images.unsplash.com/photo-1695048133142-1a20484d2569?auto=format&fit=crop&w=300&q=80'],
-      variants: [
-        { id: 'v1', name: 'Color', type: 'color', values: ['Negro Titanio', 'Blanco Titanio', 'Azul Titanio'] },
-        { id: 'v2', name: 'Capacidad', type: 'capacity', values: ['256GB', '512GB', '1TB'] }
-      ],
-      weight: 0.221,
-      dimensions: '159.9 x 76.7 x 8.25 mm',
-      warranty: '1 año',
-      tags: ['smartphone', 'apple', 'iphone', '5g'],
-      createdAt: '2024-01-15'
-    },
-    {
-      id: '2',
-      name: 'Laptop HP Pavilion 15',
-      price: 45000,
-      category: 'Electrónica',
-      stock: 8,
-      minStock: 3,
-      sku: 'HP-PAV-15',
-      brand: 'HP',
-      status: 'active',
-      featured: false,
-      images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=300&q=80'],
-      variants: [],
-      warranty: '2 años',
-      tags: ['laptop', 'hp', 'computadora'],
-      createdAt: '2024-01-10'
-    },
-    {
-      id: '3',
-      name: 'AirPods Pro 2',
-      price: 12000,
-      originalPrice: 14000,
-      category: 'Electrónica',
-      stock: 0,
-      minStock: 10,
-      sku: 'APP-PRO-2',
-      brand: 'Apple',
-      status: 'out_of_stock',
-      featured: false,
-      images: ['https://images.unsplash.com/photo-1600294037681-c80b4cb5b434?auto=format&fit=crop&w=300&q=80'],
-      variants: [],
-      warranty: '1 año',
-      tags: ['audio', 'apple', 'airpods'],
-      createdAt: '2024-01-05'
-    }
-  ]);
-
+export const SellerProducts: React.FC<SellerProductsProps> = ({
+  products,
+  onSubmitListing,
+  onDeleteListing,
+  onToggleStatus,
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [editingListing, setEditingListing] = useState<Listing | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<Listing | null>(null);
 
-  const categories = ['Electrónica', 'Ropa', 'Hogar', 'Deportes', 'Automotriz', 'Salud', 'Alimentos', 'Otros'];
+  const filtered = products.filter((p) =>
+    (p.title || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         product.sku.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-    const matchesStatus = selectedStatus === 'all' || product.status === selectedStatus;
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+  const activeCount = products.filter((p) => p.status === 'active').length;
 
-  const handleCreateProduct = () => {
-    setEditingProduct(null);
-    setShowCreateModal(true);
+  const openCreate = () => {
+    setEditingListing(null);
+    setShowForm(true);
   };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setShowCreateModal(true);
-  };
-
-  const handleDeleteProduct = (id: string) => {
-    setProducts(products.filter(p => p.id !== id));
-    setShowDeleteConfirm(null);
-  };
-
-  const handleDuplicateProduct = (product: Product) => {
-    const newProduct: Product = {
-      ...product,
-      id: Date.now().toString(),
-      name: `${product.name} (Copia)`,
-      status: 'inactive',
-      featured: false,
-      createdAt: new Date().toISOString().split('T')[0]
-    };
-    setProducts([newProduct, ...products]);
-  };
-
-  const handleToggleStatus = (product: Product) => {
-    setProducts(products.map(p => 
-      p.id === product.id 
-        ? { ...p, status: p.status === 'active' ? 'inactive' : 'active' }
-        : p
-    ));
-  };
-
-  const handleToggleFeatured = (product: Product) => {
-    setProducts(products.map(p => 
-      p.id === product.id 
-        ? { ...p, featured: !p.featured }
-        : p
-    ));
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500/20 text-green-400';
-      case 'inactive': return 'bg-gray-500/20 text-gray-400';
-      case 'out_of_stock': return 'bg-red-500/20 text-red-400';
-      default: return 'bg-gray-500/20 text-gray-400';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'active': return 'Activo';
-      case 'inactive': return 'Inactivo';
-      case 'out_of_stock': return 'Agotado';
-      default: return status;
-    }
+  const openEdit = (listing: Listing) => {
+    setEditingListing(listing);
+    setShowForm(true);
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-6xl mx-auto space-y-4 text-white">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <Package className="w-5 h-5 text-[#FF6A00]" />
-          <h2 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Gestión de Productos</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-black">Mis Productos</h2>
+          <p className="text-xs text-white/50">
+            {products.length} publicados · {activeCount} activos
+          </p>
         </div>
         <button
-          onClick={handleCreateProduct}
-          className="px-4 py-2 rounded-xl bg-[#FF6A00] text-black font-medium text-xs flex items-center gap-2 hover:bg-[#e85f00] transition-all"
+          onClick={openCreate}
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#FF6A00] text-black text-xs font-extrabold hover:bg-[#ff7b1a] transition-all cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          <span>Nuevo Producto</span>
+          Nuevo producto
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className={`p-4 rounded-xl border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}>
-          <p className={`text-xs ${darkMode ? 'text-white/60' : 'text-gray-500'}`}>Total Productos</p>
-          <p className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{products.length}</p>
-        </div>
-        <div className={`p-4 rounded-xl border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}>
-          <p className={`text-xs ${darkMode ? 'text-white/60' : 'text-gray-500'}`}>Activos</p>
-          <p className={`text-2xl font-bold text-green-500`}>{products.filter(p => p.status === 'active').length}</p>
-        </div>
-        <div className={`p-4 rounded-xl border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}>
-          <p className={`text-xs ${darkMode ? 'text-white/60' : 'text-gray-500'}`}>Agotados</p>
-          <p className={`text-2xl font-bold text-red-500`}>{products.filter(p => p.status === 'out_of_stock').length}</p>
-        </div>
-        <div className={`p-4 rounded-xl border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}>
-          <p className={`text-xs ${darkMode ? 'text-white/60' : 'text-gray-500'}`}>Destacados</p>
-          <p className={`text-2xl font-bold text-[#FF6A00]`}>{products.filter(p => p.featured).length}</p>
-        </div>
+      {/* Búsqueda */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Buscar en tus productos..."
+          className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-3 py-2.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#FF8A3D]"
+        />
       </div>
 
-      {/* Filters */}
-      <div className={`p-4 rounded-xl border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}>
-        <div className="flex flex-col md:flex-row gap-3">
-          <div className="flex-1 relative">
-            <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${darkMode ? 'text-white/40' : 'text-gray-400'}`} />
-            <input
-              type="text"
-              placeholder="Buscar por nombre o SKU..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={`w-full pl-9 pr-4 py-2 rounded-lg text-xs ${darkMode ? 'bg-white/5 text-white border-white/10' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:border-[#FF6A00]`}
-            />
-          </div>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className={`px-4 py-2 rounded-lg text-xs ${darkMode ? 'bg-white/5 text-white border-white/10' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:border-[#FF6A00]`}
-          >
-            <option value="all">Todas las categorías</option>
-            {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className={`px-4 py-2 rounded-lg text-xs ${darkMode ? 'bg-white/5 text-white border-white/10' : 'bg-gray-50 text-gray-900 border-gray-200'} border focus:outline-none focus:border-[#FF6A00]`}
-          >
-            <option value="all">Todos los estados</option>
-            <option value="active">Activos</option>
-            <option value="inactive">Inactivos</option>
-            <option value="out_of_stock">Agotados</option>
-          </select>
+      {/* Lista */}
+      {filtered.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-white/15 p-10 text-center space-y-3">
+          <Package className="w-10 h-10 mx-auto text-white/20" />
+          <p className="text-sm font-bold text-white/70">
+            {products.length === 0 ? 'Aún no tienes productos' : 'Sin resultados'}
+          </p>
+          <p className="text-xs text-white/40">
+            {products.length === 0
+              ? 'Publica tu primer artículo y empieza a vender.'
+              : 'Prueba con otra búsqueda.'}
+          </p>
+          {products.length === 0 && (
+            <button
+              onClick={openCreate}
+              className="px-4 py-2 rounded-xl bg-[#FF6A00] text-black text-xs font-extrabold hover:bg-[#ff7b1a] transition-all cursor-pointer"
+            >
+              Publicar mi primer producto
+            </button>
+          )}
         </div>
-      </div>
-
-      {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProducts.map(product => (
-          <div
-            key={product.id}
-            className={`p-4 rounded-xl border ${darkMode ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} group hover:border-[#FF6A00]/30 transition-all`}
-          >
-            {/* Product Image */}
-            <div className="relative h-40 rounded-lg overflow-hidden mb-3">
+      ) : (
+        <div className="grid gap-2.5">
+          {filtered.map((p) => (
+            <div
+              key={p.id}
+              className={`rounded-2xl border border-white/10 bg-white/5 p-3 flex items-center gap-3 ${
+                p.status !== 'active' ? 'opacity-60' : ''
+              }`}
+            >
               <img
-                src={product.images[0]}
-                alt={product.name}
-                className="w-full h-full object-cover"
+                src={p.images[0]}
+                alt={p.title}
+                className="w-14 h-14 rounded-xl object-cover bg-white/5 flex-shrink-0"
               />
-              {product.featured && (
-                <div className="absolute top-2 left-2 px-2 py-1 rounded-full bg-[#FF6A00] text-black text-[10px] font-bold flex items-center gap-1">
-                  <Star className="w-3 h-3 fill-black" />
-                  Destacado
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-bold truncate">{p.title}</p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                  <span className="text-xs font-extrabold text-[#FF8A3D]">
+                    RD$ {p.price.toLocaleString()}
+                  </span>
+                  {p.stock !== undefined && (
+                    <span className={`text-[10px] font-semibold ${p.stock <= 0 ? 'text-red-400' : 'text-white/50'}`}>
+                      Stock: {p.stock}
+                    </span>
+                  )}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    p.status === 'active'
+                      ? 'bg-emerald-500/15 text-emerald-400'
+                      : 'bg-white/10 text-white/50'
+                  }`}>
+                    {p.status === 'active' ? 'Activo' : p.status === 'sold' ? 'Vendido' : 'Pausado'}
+                  </span>
                 </div>
-              )}
-              <span className={`absolute top-2 right-2 px-2 py-1 rounded-full text-[10px] font-bold ${getStatusColor(product.status)}`}>
-                {getStatusLabel(product.status)}
-              </span>
-            </div>
-
-            {/* Product Info */}
-            <div className="space-y-2">
-              <div>
-                <h3 className={`text-sm font-bold ${darkMode ? 'text-white' : 'text-gray-900'} truncate`}>{product.name}</h3>
-                <p className={`text-[10px] ${darkMode ? 'text-white/60' : 'text-gray-500'}`}>SKU: {product.sku}</p>
               </div>
 
-              <div className="flex items-center gap-2">
-                <p className={`text-lg font-bold text-[#FF6A00]`}>RD$ {product.price.toLocaleString()}</p>
-                {product.originalPrice && (
-                  <p className={`text-xs line-through ${darkMode ? 'text-white/40' : 'text-gray-400'}`}>
-                    RD$ {product.originalPrice.toLocaleString()}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between text-[10px]">
-                <span className={darkMode ? 'text-white/60' : 'text-gray-500'}>
-                  Stock: {product.stock}
-                </span>
-                <span className={product.stock <= product.minStock ? 'text-red-500' : 'text-green-500'}>
-                  {product.stock <= product.minStock ? '⚠️ Bajo' : '✓ OK'}
-                </span>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
                 <button
-                  onClick={() => handleEditProduct(product)}
-                  className={`flex-1 py-2 rounded-lg text-xs font-medium ${darkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-all flex items-center justify-center gap-1`}
+                  onClick={() => onToggleStatus(p)}
+                  title={p.status === 'active' ? 'Pausar publicación' : 'Reactivar publicación'}
+                  className="p-2 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
                 >
-                  <Edit className="w-3 h-3" />
-                  Editar
+                  {p.status === 'active' ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
                 <button
-                  onClick={() => handleDuplicateProduct(product)}
-                  className={`p-2 rounded-lg ${darkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-all`}
-                  title="Duplicar"
+                  onClick={() => openEdit(p)}
+                  title="Editar"
+                  className="p-2 rounded-lg bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
                 >
-                  <Copy className="w-3 h-3" />
+                  <Pencil className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => handleToggleStatus(product)}
-                  className={`p-2 rounded-lg ${darkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-all`}
-                  title={product.status === 'active' ? 'Desactivar' : 'Activar'}
-                >
-                  {product.status === 'active' ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                </button>
-                <button
-                  onClick={() => handleToggleFeatured(product)}
-                  className={`p-2 rounded-lg ${product.featured ? 'bg-[#FF6A00]/20 text-[#FF6A00]' : darkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} transition-all`}
-                  title="Destacar"
-                >
-                  <Star className={`w-3 h-3 ${product.featured ? 'fill-[#FF6A00]' : ''}`} />
-                </button>
-                <button
-                  onClick={() => setShowDeleteConfirm(product.id)}
-                  className={`p-2 rounded-lg ${darkMode ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20' : 'bg-red-50 text-red-500 hover:bg-red-100'} transition-all`}
+                  onClick={() => setConfirmDelete(p)}
                   title="Eliminar"
+                  className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all cursor-pointer"
                 >
-                  <Trash2 className="w-3 h-3" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className={`max-w-sm w-full p-6 rounded-2xl ${darkMode ? 'bg-[#18191C] border border-white/10' : 'bg-white border border-gray-200'}`}>
-            <div className="text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto">
-                <AlertCircle className="w-6 h-6 text-red-500" />
-              </div>
-              <div>
-                <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>¿Eliminar producto?</h3>
-                <p className={`text-sm ${darkMode ? 'text-white/60' : 'text-gray-500'}`}>
-                  Esta acción no se puede deshacer.
-                </p>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowDeleteConfirm(null)}
-                  className={`flex-1 py-2.5 rounded-xl text-xs font-medium ${darkMode ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => handleDeleteProduct(showDeleteConfirm)}
-                  className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-xs font-medium hover:bg-red-600"
-                >
-                  Eliminar
-                </button>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       )}
 
-      {/* Create/Edit Modal Placeholder */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className={`max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 rounded-2xl ${darkMode ? 'bg-[#18191C] border border-white/10' : 'bg-white border border-gray-200'}`}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
+      {/* Modal crear/editar */}
+      {showForm && (
+        <CreateListingModal
+          onClose={() => {
+            setShowForm(false);
+            setEditingListing(null);
+          }}
+          onSubmitListing={onSubmitListing}
+          currentCity=""
+          editingListing={editingListing}
+        />
+      )}
+
+      {/* Confirmación de borrado */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-[#181818] border border-white/10 rounded-2xl p-5 w-full max-w-sm space-y-4">
+            <div className="flex items-start justify-between">
+              <h3 className="font-extrabold text-sm flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-400" />
+                Eliminar producto
               </h3>
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className={`p-2 rounded-lg ${darkMode ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-700'}`}
-              >
-                <X className="w-5 h-5" />
+              <button onClick={() => setConfirmDelete(null)} className="text-white/50 hover:text-white">
+                <X className="w-4 h-4" />
               </button>
             </div>
-
-            <div className={`p-8 rounded-xl border border-dashed ${darkMode ? 'border-white/10 bg-white/5' : 'border-gray-300 bg-gray-50'} text-center`}>
-              <Package className={`w-12 h-12 mx-auto mb-3 ${darkMode ? 'text-white/40' : 'text-gray-400'}`} />
-              <p className={`text-sm ${darkMode ? 'text-white/60' : 'text-gray-600'}`}>
-                Formulario de producto completo en construcción...
-              </p>
-              <p className={`text-xs ${darkMode ? 'text-white/40' : 'text-gray-400'} mt-2`}>
-                Incluirá: imágenes múltiples, video, variantes, SKU, código de barras, stock, dimensiones, garantía, etiquetas, programación de publicación, etc.
-              </p>
+            <p className="text-xs text-white/60">
+              Vas a eliminar <span className="font-bold text-white">"{confirmDelete.title}"</span> de forma
+              permanente. Desaparecerá de Zyplaza para todos los usuarios.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  onDeleteListing(confirmDelete);
+                  setConfirmDelete(null);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-xs font-extrabold hover:bg-red-600 transition-all cursor-pointer"
+              >
+                Sí, eliminar
+              </button>
             </div>
           </div>
         </div>

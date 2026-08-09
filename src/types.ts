@@ -11,6 +11,7 @@ export interface Listing {
   sector?: string;
   distanceKm: number;
   storeId?: string;
+  sellerId?: string;
   sellerName: string;
   sellerAvatar: string;
   sellerRating: number;
@@ -19,13 +20,20 @@ export interface Listing {
   images: string[];
   description: string;
   tags: string[];
+  stock?: number;
   isFlashOffer?: boolean;
   flashEndTime?: string; // ISO or formatted
   viewsCount: number;
   likesCount: number;
   createdAt: string;
   deliveryOption: 'Punto Neutro / Presencial' | 'Envío Local' | 'A Convenir';
-  status: 'active' | 'sold' | 'reserved';
+  status: 'active' | 'inactive' | 'sold' | 'reserved';
+}
+
+export interface StoreSocials {
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
 }
 
 export interface Store {
@@ -38,6 +46,7 @@ export interface Store {
   rating: number;
   reviewsCount: number;
   city: string;
+  province?: string;
   address: string;
   verified: boolean;
   responseTime: string;
@@ -46,17 +55,24 @@ export interface Store {
   totalListings: number;
   description: string;
   ownerId?: string;
+  ownerName?: string;
+  ownerAvatar?: string;
   whatsapp?: string;
+  phone?: string;
+  email?: string;
+  socials?: StoreSocials;
   status?: 'active' | 'pending' | 'suspended';
   sellerLevel?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ChatMessage {
   id: string;
   conversationId: string;
-  sender: 'user' | 'seller';
+  senderId: string;
   text: string;
+  createdAtMs: number;
   timestamp: string;
   isOffer?: boolean;
   offerAmount?: number;
@@ -70,12 +86,19 @@ export interface Conversation {
   listingTitle: string;
   listingPrice: number;
   listingImage: string;
+  participants: string[];
+  buyerId: string;
+  buyerName: string;
+  buyerAvatar: string;
+  sellerId: string;
   sellerName: string;
   sellerAvatar: string;
+  storeId?: string;
   isVerifiedSeller?: boolean;
   lastMessage: string;
   lastMessageTime: string;
-  unreadCount: number;
+  updatedAtMs: number;
+  unreadCounts: Record<string, number>;
   meetingPoint?: string;
 }
 
@@ -100,17 +123,21 @@ export interface UserProfileData {
   city: string;
   avatar?: string;
   rating?: number;
-  salesCount?: number;
-  joinedDate?: string;
+  salesCount: number;
+  favorites: string[];
+  followingStores?: string[];
   isVerified?: boolean;
   role?: 'buyer' | 'seller';
   storeId?: string;
+  status?: 'active' | 'suspended';
+  joinedDate?: string;
 }
 
 export interface Review {
   id: string;
   targetId: string; // storeId or listingId
   targetType: 'store' | 'listing';
+  authorId?: string;
   authorName: string;
   authorAvatar?: string;
   rating: number; // 1 to 5

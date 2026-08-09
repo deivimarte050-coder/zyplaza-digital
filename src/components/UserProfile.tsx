@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { Listing, Store, UserProfileData } from '../types';
-import { 
-  User, 
-  ShoppingBag, 
-  Heart, 
-  ShieldCheck, 
-  Star, 
-  MapPin, 
-  Settings, 
-  RotateCcw, 
-  BadgeCheck, 
+import { CITIES } from '../data/mockData';
+import { updateUserProfile } from '../services/firestore';
+import { uploadImage } from '../services/imageUpload';
+import {
+  User,
+  ShieldCheck,
+  Star,
+  BadgeCheck,
   Plus,
   LogOut,
   LogIn,
   LayoutDashboard,
   ShieldHalf,
   Rocket,
-  BarChart3
+  BarChart3,
+  Pencil,
+  Camera
 } from 'lucide-react';
 
 interface UserProfileProps {
@@ -25,7 +25,6 @@ interface UserProfileProps {
   favoriteListings: Listing[];
   onSelectListing: (listing: Listing) => void;
   onOpenCreateListing: () => void;
-  onResetData: () => void;
   onLogout: () => void;
   onRequestAuth: () => void;
   onOpenSellerPanel?: () => void;
@@ -41,7 +40,6 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   favoriteListings,
   onSelectListing,
   onOpenCreateListing,
-  onResetData,
   onLogout,
   onRequestAuth,
   onOpenSellerPanel,
@@ -51,6 +49,50 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   onOpenCreateStore,
 }) => {
   const [activeTab, setActiveTab] = useState<'my_items' | 'favorites' | 'security'>('my_items');
+
+  // ---- Edición de perfil (persistida en Firestore) ----
+  const [editName, setEditName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editCity, setEditCity] = useState('');
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileMsg, setProfileMsg] = useState('');
+  const [profileInitialized, setProfileInitialized] = useState(false);
+
+  const startEditIfNeeded = () => {
+    if (profileInitialized || !user) return;
+    setEditName(user.name || '');
+    setEditPhone(user.phone || '');
+    setEditCity(user.city || CITIES[0]);
+    setProfileInitialized(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user || savingProfile) return;
+    if (!editName.trim()) {
+      setProfileMsg('El nombre no puede estar vacío.');
+      return;
+    }
+    setSavingProfile(true);
+    setProfileMsg('');
+    try {
+      let avatarUrl = user.avatar;
+      if (avatarFile) {
+        avatarUrl = await uploadImage(avatarFile, `users/${user.id}/avatar-${Date.now()}.jpg`);
+      }
+      await updateUserProfile(user.id, {
+        name: editName.trim(),
+        phone: editPhone.trim() || undefined,
+        city: editCity,
+        avatar: avatarUrl,
+      });
+      setProfileMsg('✅ Perfil actualizado correctamente.');
+    } catch {
+      setProfileMsg('❌ No se pudo guardar. Intenta de nuevo.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -86,7 +128,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <img
-              src={user.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"}
+              src={user.avatar || `https://ui-avatars.com/api/?background=FF6A00&color=000&name=${encodeURIComponent(user.name || 'U')}`}
               alt="Perfil"
               className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-[#FF6A00]"
             />
@@ -99,8 +141,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({
 
               <div className="flex items-center gap-2 mt-2 text-xs font-semibold text-[#FF8A3D]">
                 <Star className="w-4 h-4 fill-[#FF8A3D] text-[#FF8A3D]" />
-                <span>{user.rating || '5.0'} Vendedor Verificado</span>
-                <span className="text-white/40">• {user.salesCount || 0} ventas</span>
+                <span>{(user.rating ?? 5).toFixed(1)}</span>
+                <span className="text-white/40">• {isSeller ? 'Cuenta de vendedor' : 'Cuenta de comprador'}</span>
               </div>
             </div>
           </div>
@@ -155,8 +197,10 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             <span className="text-white/50">Favoritos</span>
           </div>
           <div>
-            <span className="block text-base font-extrabold text-emerald-400">100%</span>
-            <span className="text-white/50">Reputación Positiva</span>
+            <span className="block text-base font-extrabold text-emerald-400">
+              {userListings.filter((l) => l.status === 'active').length}
+            </span>
+            <span className="text-white/50">Activas ahora</span>
           </div>
         </div>
       </div>
@@ -182,12 +226,15 @@ export const UserProfile: React.FC<UserProfileProps> = ({
         </button>
 
         <button
-          onClick={() => setActiveTab('security')}
+          onClick={() => {
+            setActiveTab('security');
+            startEditIfNeeded();
+          }}
           className={`pb-3 border-b-2 transition-all cursor-pointer ${
             activeTab === 'security' ? 'border-[#FF6A00] text-[#FF8A3D]' : 'border-transparent text-white/50 hover:text-white'
           }`}
         >
-          Seguridad y Configuración
+          Configuración
         </button>
       </div>
 
@@ -204,7 +251,11 @@ export const UserProfile: React.FC<UserProfileProps> = ({
               <div className="flex-1 min-w-0">
                 <h4 className="text-xs font-bold text-white truncate">{item.title}</h4>
                 <p className="text-xs font-extrabold text-[#FF8A3D] mt-0.5">RD$ {item.price.toLocaleString()}</p>
-                <span className="text-[10px] text-emerald-400 font-semibold">● Activo</span>
+                <span className={`text-[10px] font-semibold ${
+                  item.status === 'active' ? 'text-emerald-400' : 'text-white/40'
+                }`}>
+                  ● {item.status === 'active' ? 'Activo' : item.status === 'sold' ? 'Vendido' : 'Pausado'}
+                </span>
               </div>
             </div>
           ))}
@@ -234,23 +285,108 @@ export const UserProfile: React.FC<UserProfileProps> = ({
       )}
 
       {activeTab === 'security' && (
-        <div className="bg-neutral-900 border border-white/10 rounded-3xl p-6 space-y-4 text-xs">
+        <div className="bg-neutral-900 border border-white/10 rounded-3xl p-6 space-y-5 text-xs">
           <div className="flex items-center gap-3 text-emerald-400 font-bold">
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            <span>Verificación de Identidad Activa (Verificado con Cédula)</span>
+            <span>Cuenta protegida con Firebase Authentication</span>
           </div>
 
+          {/* Editar perfil */}
+          <div className="pt-4 border-t border-white/10 space-y-3">
+            <h4 className="font-bold text-white text-sm flex items-center gap-2">
+              <Pencil className="w-4 h-4 text-[#FF8A3D]" />
+              Editar mi perfil
+            </h4>
+
+            {profileMsg && (
+              <p className={`text-[11px] font-semibold ${profileMsg.startsWith('✅') ? 'text-emerald-400' : 'text-red-400'}`}>
+                {profileMsg}
+              </p>
+            )}
+
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <img
+                  src={
+                    avatarFile
+                      ? URL.createObjectURL(avatarFile)
+                      : user.avatar || `https://ui-avatars.com/api/?background=FF6A00&color=000&name=${encodeURIComponent(user.name || 'U')}`
+                  }
+                  alt=""
+                  className="w-14 h-14 rounded-full object-cover border border-white/20"
+                />
+                <label className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-[#FF6A00] text-black cursor-pointer hover:scale-110 transition-all">
+                  <Camera className="w-3 h-3" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) setAvatarFile(f);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
+              </div>
+              <p className="text-[11px] text-white/50">Toca el ícono de cámara para cambiar tu foto de perfil.</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-white/70">Nombre completo</label>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF8A3D]"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-white/70">Teléfono / WhatsApp</label>
+                <input
+                  type="tel"
+                  value={editPhone}
+                  onChange={(e) => setEditPhone(e.target.value)}
+                  placeholder="Ej: 809-555-1234"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF8A3D]"
+                />
+              </div>
+              <div className="space-y-1 sm:col-span-2">
+                <label className="text-[11px] font-bold text-white/70">Ciudad</label>
+                <select
+                  value={editCity}
+                  onChange={(e) => setEditCity(e.target.value)}
+                  className="w-full bg-[#1A1B1F] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF8A3D]"
+                >
+                  {CITIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveProfile}
+              disabled={savingProfile}
+              className="px-5 py-2.5 rounded-full bg-[#FF6A00] text-black font-extrabold text-xs hover:bg-[#ff7b1a] transition-all cursor-pointer disabled:opacity-60"
+            >
+              {savingProfile ? 'Guardando...' : 'Guardar cambios'}
+            </button>
+          </div>
+
+          {/* Cerrar sesión */}
           <div className="pt-4 border-t border-white/10 flex items-center justify-between">
             <div>
-              <h4 className="font-bold text-white text-sm">Restablecer Datos de Demostración</h4>
-              <p className="text-white/50 text-[11px]">Restaura las ofertas relámpago, tiendas y chats originales del prototipo.</p>
+              <h4 className="font-bold text-white text-sm">Cerrar sesión</h4>
+              <p className="text-white/50 text-[11px]">Sal de tu cuenta en este dispositivo.</p>
             </div>
             <button
-              onClick={onResetData}
+              onClick={onLogout}
               className="px-4 py-2 rounded-full bg-white/10 hover:bg-red-500/20 text-white hover:text-red-400 font-bold text-xs border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Restablecer</span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Salir</span>
             </button>
           </div>
         </div>

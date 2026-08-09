@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
@@ -39,6 +40,7 @@ function getFirebaseApp(): FirebaseApp {
 
 let cachedAuth: Auth | null = null;
 let cachedDb: Firestore | null = null;
+let cachedStorage: FirebaseStorage | null = null;
 
 export function getFirebaseAuth(): Auth {
   if (!cachedAuth) {
@@ -58,4 +60,11 @@ export function getDb(): Firestore {
     cachedDb = getFirestore(getFirebaseApp(), databaseId);
   }
   return cachedDb;
+}
+
+export function getFirebaseStorage(): FirebaseStorage {
+  if (!cachedStorage) {
+    cachedStorage = getStorage(getFirebaseApp());
+  }
+  return cachedStorage;
 }
