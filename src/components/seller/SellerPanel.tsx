@@ -65,17 +65,17 @@ export const SellerPanel: React.FC<SellerPanelProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#0A0A0A] flex flex-col md:flex-row">
+    <div className="fixed inset-0 z-50 bg-void flex flex-col md:flex-row">
       {/* Sidebar (escritorio) */}
-      <aside className="hidden md:flex md:flex-col w-64 h-full bg-[#0E0F12] border-r border-white/10">
-        <div className="p-5 border-b border-white/10">
+      <aside className="hidden md:flex md:flex-col w-64 h-full bg-surface border-r border-line">
+        <div className="p-5 border-b border-line">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF6A00] to-[#e85f00] flex items-center justify-center">
-              <StoreNavIcon className="w-6 h-6 text-black" />
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange to-orange-dim flex items-center justify-center">
+              <StoreNavIcon className="w-6 h-6 text-void" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Zyplaza</h2>
-              <p className="text-sm text-white/70">Panel de vendedor</p>
+              <h2 className="text-base font-bold text-text-1 font-display">Zyplaza</h2>
+              <p className="text-sm text-text-2">Panel de vendedor</p>
             </div>
           </div>
         </div>
@@ -90,7 +90,7 @@ export const SellerPanel: React.FC<SellerPanelProps> = ({
                 key={tab.id}
                 onClick={() => setSection(tab.id)}
                 className={`w-full text-left flex items-center gap-3 px-3 py-3 rounded-xl transition-all ${
-                  isActive ? 'bg-[#FF6A00] text-black' : 'text-white hover:bg-white/10'
+                  isActive ? 'bg-orange text-void' : 'text-text-1 hover:bg-surface-2'
                 }`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
@@ -100,7 +100,7 @@ export const SellerPanel: React.FC<SellerPanelProps> = ({
           })}
         </nav>
 
-        <div className="p-3 border-t border-white/10">
+        <div className="p-3 border-t border-line">
           <button
             onClick={onClose}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-500/10 transition-all"
@@ -114,21 +114,21 @@ export const SellerPanel: React.FC<SellerPanelProps> = ({
       {/* Contenido */}
       <main className="flex-1 flex flex-col min-h-0">
         {/* Encabezado */}
-        <header className="flex items-center justify-between gap-3 p-4 border-b border-white/10 bg-[#0E0F12]">
+        <header className="flex items-center justify-between gap-3 p-4 border-b border-line bg-surface">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-[#FF6A00]/15 flex items-center justify-center flex-shrink-0">
-              {activeTab && <activeTab.icon className="w-5 h-5 text-[#FF6A00]" />}
+            <div className="w-9 h-9 rounded-xl bg-orange/15 flex items-center justify-center flex-shrink-0">
+              {activeTab && <activeTab.icon className="w-5 h-5 text-orange" />}
             </div>
             <div className="min-w-0">
-              <h1 className="text-lg font-bold truncate text-white">{activeTab?.label}</h1>
-              <p className="text-sm truncate text-white/70">{store?.name ?? 'Tu tienda'}</p>
+              <h1 className="text-lg font-bold truncate text-text-1 font-display">{activeTab?.label}</h1>
+              <p className="text-sm truncate text-text-2">{store?.name ?? 'Tu tienda'}</p>
             </div>
           </div>
 
           <button
             onClick={onClose}
             aria-label="Salir del panel"
-            className="p-2.5 rounded-xl bg-white/10 text-white hover:bg-white/20 flex-shrink-0"
+            className="p-2.5 rounded-xl bg-surface-2 text-text-1 hover:bg-line flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -138,7 +138,7 @@ export const SellerPanel: React.FC<SellerPanelProps> = ({
         <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6">{renderContent()}</div>
 
         {/* Navegación inferior (móvil) */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-white/10 bg-[#0E0F12]">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-line bg-surface">
           <div className="grid grid-cols-3">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -150,8 +150,8 @@ export const SellerPanel: React.FC<SellerPanelProps> = ({
                   onClick={() => setSection(tab.id)}
                   className="flex flex-col items-center gap-1 py-2.5"
                 >
-                  <Icon className={`w-5 h-5 ${isActive ? 'text-[#FF6A00]' : 'text-white/60'}`} />
-                  <span className={`text-[11px] font-medium ${isActive ? 'text-[#FF6A00]' : 'text-white/60'}`}>
+                  <Icon className={`w-5 h-5 ${isActive ? 'text-orange' : 'text-text-3'}`} />
+                  <span className={`text-[11px] font-medium ${isActive ? 'text-orange' : 'text-text-3'}`}>
                     {tab.label}
                   </span>
                 </button>

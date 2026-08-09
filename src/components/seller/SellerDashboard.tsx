@@ -32,18 +32,18 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ onNavigate, st
     { title: 'Productos activos', value: String(activeProducts.length), icon: Package, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
     { title: 'Visitas a tus artículos', value: totalViews.toLocaleString(), icon: Eye, color: 'text-blue-400', bg: 'bg-blue-500/15' },
     { title: 'Pausados / vendidos', value: String(inactiveProducts.length), icon: AlertCircle, color: 'text-amber-400', bg: 'bg-amber-500/15' },
-    { title: 'Calificación de tienda', value: (store?.rating ?? 5).toFixed(1), icon: Star, color: 'text-[#FF8A3D]', bg: 'bg-[#FF6A00]/15' },
+    { title: 'Calificación de tienda', value: (store?.rating ?? 5).toFixed(1), icon: Star, color: 'text-orange', bg: 'bg-orange/15' },
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6 text-white">
+    <div className="max-w-6xl mx-auto space-y-6 text-text-1">
       {/* Saludo */}
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-[#FF6A00]/15 to-transparent p-5">
-        <h2 className="text-lg font-black flex items-center gap-2">
-          <StoreIcon className="w-5 h-5 text-[#FF8A3D]" />
+      <div className="rounded-2xl border border-line bg-gradient-to-r from-orange/15 to-transparent p-5">
+        <h2 className="text-lg font-black flex items-center gap-2 font-display">
+          <StoreIcon className="w-5 h-5 text-orange" />
           {store?.name ?? 'Tu tienda'}
         </h2>
-        <p className="text-xs text-white/60 mt-1">
+        <p className="text-xs text-text-2 mt-1">
           Aquí ves el resumen real de tu actividad en Zyplaza. Todo se actualiza en tiempo real.
         </p>
       </div>
@@ -51,12 +51,12 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ onNavigate, st
       {/* Estadísticas reales */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {stats.map((s) => (
-          <div key={s.title} className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-2">
+          <div key={s.title} className="rounded-2xl border border-line bg-surface p-4 space-y-2">
             <div className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center`}>
               <s.icon className={`w-4.5 h-4.5 ${s.color}`} />
             </div>
-            <p className="text-xl font-black text-white">{s.value}</p>
-            <p className="text-[11px] text-white/50 font-semibold">{s.title}</p>
+            <p className="text-xl font-black text-text-1">{s.value}</p>
+            <p className="text-[11px] text-text-3 font-semibold">{s.title}</p>
           </div>
         ))}
       </div>
@@ -72,7 +72,7 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ onNavigate, st
             <p className="text-sm font-bold text-amber-300">
               {outOfStock.length} {outOfStock.length === 1 ? 'producto se quedó' : 'productos se quedaron'} sin stock
             </p>
-            <p className="text-xs text-white/60">Tócalo para actualizar el inventario.</p>
+            <p className="text-xs text-text-2">Tócalo para actualizar el inventario.</p>
           </div>
           <ArrowRight className="w-4 h-4 text-amber-400" />
         </button>
@@ -81,37 +81,37 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ onNavigate, st
       {products.length === 0 && (
         <button
           onClick={() => onNavigate('products')}
-          className="w-full text-left rounded-2xl border border-[#FF6A00]/30 bg-[#FF6A00]/10 p-5 flex items-center gap-3 hover:bg-[#FF6A00]/15 transition-all"
+          className="w-full text-left rounded-2xl border border-orange/30 bg-orange/10 p-5 flex items-center gap-3 hover:bg-orange/15 transition-all"
         >
-          <Plus className="w-6 h-6 text-[#FF8A3D] flex-shrink-0" />
+          <Plus className="w-6 h-6 text-orange flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-bold text-white">Publica tu primer producto</p>
-            <p className="text-xs text-white/60">Todavía no tienes artículos a la venta. Empieza ahora.</p>
+            <p className="text-sm font-bold text-text-1">Publica tu primer producto</p>
+            <p className="text-xs text-text-2">Todavía no tienes artículos a la venta. Empieza ahora.</p>
           </div>
-          <ArrowRight className="w-4 h-4 text-[#FF8A3D]" />
+          <ArrowRight className="w-4 h-4 text-orange" />
         </button>
       )}
 
       <div className="grid md:grid-cols-2 gap-4">
         {/* Más vistos */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+        <div className="rounded-2xl border border-line bg-surface p-4 space-y-3">
           <h3 className="text-sm font-bold flex items-center gap-2">
             <Eye className="w-4 h-4 text-blue-400" />
             Tus artículos más vistos
           </h3>
           {topViewed.length === 0 ? (
-            <p className="text-xs text-white/40">Sin artículos todavía.</p>
+            <p className="text-xs text-text-3">Sin artículos todavía.</p>
           ) : (
             <div className="space-y-2">
               {topViewed.map((p) => (
                 <div key={p.id} className="flex items-center gap-3">
-                  <img src={p.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover bg-white/5" />
+                  <img src={p.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover bg-surface-2" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold truncate">{p.title}</p>
-                    <p className="text-[10px] text-white/40">{p.viewsCount} visitas</p>
+                    <p className="text-[10px] text-text-3">{p.viewsCount} visitas</p>
                   </div>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    p.status === 'active' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-white/10 text-white/50'
+                    p.status === 'active' ? 'bg-emerald-500/15 text-emerald-400' : 'bg-surface-2 text-text-3'
                   }`}>
                     {p.status === 'active' ? 'Activo' : 'Pausado'}
                   </span>
@@ -122,25 +122,25 @@ export const SellerDashboard: React.FC<SellerDashboardProps> = ({ onNavigate, st
         </div>
 
         {/* Recientes */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
+        <div className="rounded-2xl border border-line bg-surface p-4 space-y-3">
           <h3 className="text-sm font-bold flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             Publicados recientemente
           </h3>
           {recentProducts.length === 0 ? (
-            <p className="text-xs text-white/40">Sin artículos todavía.</p>
+            <p className="text-xs text-text-3">Sin artículos todavía.</p>
           ) : (
             <div className="space-y-2">
               {recentProducts.map((p) => (
                 <div key={p.id} className="flex items-center gap-3">
-                  <img src={p.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover bg-white/5" />
+                  <img src={p.images[0]} alt="" className="w-10 h-10 rounded-lg object-cover bg-surface-2" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold truncate">{p.title}</p>
-                    <p className="text-[10px] text-[#FF8A3D] font-bold">RD$ {p.price.toLocaleString()}</p>
+                    <p className="text-[10px] text-orange font-bold">RD$ {p.price.toLocaleString()}</p>
                   </div>
                   <button
                     onClick={() => onNavigate('products')}
-                    className="text-[10px] font-bold text-white/50 hover:text-white border border-white/10 rounded-full px-2.5 py-1"
+                    className="text-[10px] font-bold text-text-3 hover:text-text-1 border border-line rounded-full px-2.5 py-1"
                   >
                     Gestionar
                   </button>
