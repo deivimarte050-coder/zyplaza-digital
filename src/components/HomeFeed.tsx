@@ -254,7 +254,9 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
       <section className="max-w-7xl mx-auto px-3.5 sm:px-4 pt-3">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm sm:text-base font-bold text-white">
-            Más Publicaciones Cercanas ({listings.length})
+            {searchQuery
+              ? `Resultados para "${filters.searchQuery}" (${listings.length})`
+              : `Más Publicaciones Cercanas (${listings.length})`}
           </h2>
 
           <select

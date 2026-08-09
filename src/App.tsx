@@ -615,7 +615,7 @@ export default function App() {
         if (!matchTitle && !matchCategory && !matchDesc && !matchSeller && !matchTags) return false;
       }
       if (filters.category !== 'all' && item.category !== filters.category) return false;
-      if (filters.city !== 'all' && (item.city || '').toLowerCase() !== (filters.city || '').toLowerCase()) return false;
+      if (filters.city !== 'all' && (item.city || '').trim().toLowerCase() !== (filters.city || '').trim().toLowerCase()) return false;
       if (filters.condition !== 'all' && item.condition !== filters.condition) return false;
       if (filters.verifiedOnly && !item.isVerifiedStore) return false;
       if (filters.flashOnly && !(item.originalPrice && item.originalPrice > item.price)) return false;
