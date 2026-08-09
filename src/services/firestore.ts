@@ -51,6 +51,24 @@ function asStringArray(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
 }
 
+/**
+ * Firestore rechaza cualquier campo con valor `undefined` (p.ej. precios u
+ * otros campos opcionales que el formulario deja vacíos). Esta función quita
+ * esas claves recursivamente antes de escribir, sin tocar `null` ni arrays.
+ */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): T {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value === undefined) continue;
+    if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+      result[key] = stripUndefined(value as Record<string, unknown>);
+    } else {
+      result[key] = value;
+    }
+  }
+  return result as T;
+}
+
 /* ------------------------------------------------------------------ */
 /* Conversores (Firestore -> tipos de la app)                          */
 /* ------------------------------------------------------------------ */
@@ -310,7 +328,7 @@ export async function createUserProfile(user: UserProfileData): Promise<void> {
 }
 
 export async function updateUserProfile(uid: string, data: Partial<UserProfileData>): Promise<void> {
-  await updateDoc(doc(getDb(), 'users', uid), { ...data, updatedAt: new Date().toISOString() });
+  await updateDoc(doc(getDb(), 'users', uid), stripUndefined({ ...data, updatedAt: new Date().toISOString() }));
 }
 
 /** Sigue o deja de seguir una tienda y ajusta su contador de seguidores. */
@@ -332,14 +350,14 @@ export async function createStoreDoc(store: Store): Promise<string> {
   const id = store.id && store.id !== 'new' ? store.id : newDocId('stores');
   const { id: _ignored, ...rest } = store;
   void _ignored;
-  await setDoc(doc(getDb(), 'stores', id), { ...rest, id });
+  await setDoc(doc(getDb(), 'stores', id), stripUndefined({ ...rest, id }));
   return id;
 }
 
 export async function updateStoreDoc(storeId: string, data: Partial<Store>): Promise<void> {
   const { id: _ignored, ...rest } = data as Store;
   void _ignored;
-  await updateDoc(doc(getDb(), 'stores', storeId), { ...rest, updatedAt: new Date().toISOString() });
+  await updateDoc(doc(getDb(), 'stores', storeId), stripUndefined({ ...rest, updatedAt: new Date().toISOString() }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -350,7 +368,7 @@ export async function createListingDoc(listing: Listing): Promise<string> {
   const id = listing.id && listing.id !== 'new' ? listing.id : newDocId('products');
   const { id: _ignored, ...rest } = listing;
   void _ignored;
-  await setDoc(doc(getDb(), 'products', id), { ...rest, id });
+  await setDoc(doc(getDb(), 'products', id), stripUndefined({ ...rest, id }));
   if (listing.storeId) {
     await updateDoc(doc(getDb(), 'stores', listing.storeId), { totalListings: increment(1) }).catch(() => undefined);
   }
@@ -360,7 +378,7 @@ export async function createListingDoc(listing: Listing): Promise<string> {
 export async function updateListingDoc(listingId: string, data: Partial<Listing>): Promise<void> {
   const { id: _ignored, ...rest } = data as Listing;
   void _ignored;
-  await updateDoc(doc(getDb(), 'products', listingId), { ...rest, updatedAt: new Date().toISOString() });
+  await updateDoc(doc(getDb(), 'products', listingId), stripUndefined({ ...rest, updatedAt: new Date().toISOString() }));
 }
 
 export async function deleteListingDoc(listing: Listing): Promise<void> {
@@ -379,11 +397,11 @@ export async function incrementListingViews(listingId: string): Promise<void> {
 /* ------------------------------------------------------------------ */
 
 export async function addReviewDoc(review: Omit<Review, 'id' | 'createdAt'>): Promise<void> {
-  await addDoc(collection(getDb(), 'reviews'), {
+  await addDoc(collection(getDb(), 'reviews'), stripUndefined({
     ...review,
     createdAt: 'Hace un momento',
     createdAtMs: Date.now(),
-  });
+  }));
 }
 
 /* ------------------------------------------------------------------ */
@@ -403,7 +421,7 @@ export async function findConversation(buyerId: string, listingId: string): Prom
 
 export async function createConversationDoc(conv: Omit<Conversation, 'id' | 'lastMessageTime'>): Promise<string> {
   const ref = doc(collection(getDb(), 'conversations'));
-  await setDoc(ref, { ...conv, id: ref.id, createdAt: serverTimestamp() });
+  await setDoc(ref, { ...stripUndefined(conv), id: ref.id, createdAt: serverTimestamp() });
   return ref.id;
 }
 
