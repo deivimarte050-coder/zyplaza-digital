@@ -243,39 +243,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in">
-      <div className="relative w-full max-w-md bg-[#121316] border border-white/10 rounded-3xl overflow-hidden shadow-2xl my-auto text-white p-5 sm:p-6 space-y-5">
+      <div className="relative w-full max-w-md bg-surface border border-line rounded-3xl overflow-hidden shadow-2xl my-auto text-text-1 p-5 sm:p-6 space-y-5 font-body">
         
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+          className="absolute top-4 right-4 p-2 rounded-full bg-white/5 border border-line text-text-2 hover:text-text-1 hover:bg-white/10 transition-all cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
         {/* Brand Header */}
         <div className="text-center space-y-1.5 pt-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FF6A00]/15 border border-[#FF6A00]/30 text-[#FF8A3D] text-xs font-bold">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-dim border border-orange/30 text-orange-soft text-xs font-bold">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Zyplaza LOCAL</span>
           </div>
           
-          <h2 className="text-xl sm:text-2xl font-black text-white">
+          <h2 className="text-xl sm:text-2xl font-display font-semibold text-text-1">
             {mode === 'login' ? 'Iniciar Sesión' : 'Crear Cuenta'}
           </h2>
           
-          <p className="text-xs text-white/60 max-w-xs mx-auto leading-relaxed">
-            Regístrate o inicia sesión <span className="text-[#FF8A3D] font-semibold">{titleActionReason}</span>.
+          <p className="text-xs text-text-2 max-w-xs mx-auto leading-relaxed">
+            Regístrate o inicia sesión <span className="text-orange-soft font-semibold">{titleActionReason}</span>.
           </p>
         </div>
 
         {/* Mode Toggle Switcher */}
-        <div className="grid grid-cols-2 p-1 bg-white/5 border border-white/10 rounded-2xl">
+        <div className="grid grid-cols-2 p-1 bg-white/5 border border-line rounded-2xl">
           <button
             type="button"
             onClick={() => { setMode('login'); setErrorMsg(''); }}
             className={`py-2 text-xs font-bold rounded-xl transition-all ${
-              mode === 'login' ? 'bg-[#FF6A00] text-black shadow-md' : 'text-white/60 hover:text-white'
+              mode === 'login' ? 'bg-orange text-[#0A0400] shadow-md' : 'text-text-2 hover:text-text-1'
             }`}
           >
             Iniciar Sesión
@@ -284,7 +284,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             type="button"
             onClick={() => { setMode('register'); setErrorMsg(''); }}
             className={`py-2 text-xs font-bold rounded-xl transition-all ${
-              mode === 'register' ? 'bg-[#FF6A00] text-black shadow-md' : 'text-white/60 hover:text-white'
+              mode === 'register' ? 'bg-orange text-[#0A0400] shadow-md' : 'text-text-2 hover:text-text-1'
             }`}
           >
             Registrarse
@@ -307,9 +307,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </button>
 
         <div className="flex items-center gap-3 my-2">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">o con tu datos</span>
-          <div className="flex-1 h-px bg-white/10" />
+          <div className="flex-1 h-px bg-line" />
+          <span className="text-[10px] uppercase tracking-wider text-text-3 font-bold">o con tu datos</span>
+          <div className="flex-1 h-px bg-line" />
         </div>
 
         {/* Form */}
@@ -324,39 +324,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {mode === 'register' && (
             <>
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-white/80">Nombre Completo</label>
+                <label className="text-[11px] font-bold text-text-2">Nombre Completo</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-3" />
                   <input
                     type="text"
                     autoComplete="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Ej: Juan Pérez"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#FF8A3D]"
+                    className="w-full bg-white/5 border border-line rounded-2xl pl-9 pr-3 py-2 text-xs text-text-1 placeholder-text-3 focus:outline-none focus:border-orange-soft"
                   />
                 </div>
               </div>
 
               {/* Avatar Upload */}
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-white/80">Foto de Perfil (Opcional)</label>
+                <label className="text-[11px] font-bold text-text-2">Foto de Perfil (Opcional)</label>
                 <div className="flex items-center gap-3">
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-16 h-16 rounded-full bg-white/5 border-2 border-dashed border-white/20 flex items-center justify-center cursor-pointer hover:border-[#FF8A3D] transition-all overflow-hidden"
+                    className="w-16 h-16 rounded-full bg-white/5 border-2 border-dashed border-line-strong flex items-center justify-center cursor-pointer hover:border-orange-soft transition-all overflow-hidden"
                   >
                     {avatarPreview ? (
                       <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <Camera className="w-6 h-6 text-white/40" />
+                      <Camera className="w-6 h-6 text-text-3" />
                     )}
                   </div>
                   <div className="flex-1">
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-2 px-3 bg-white/5 border border-white/10 rounded-xl text-xs text-white/80 hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full py-2 px-3 bg-white/5 border border-line rounded-xl text-xs text-text-2 hover:bg-white/10 hover:text-text-1 transition-all flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       <span>Subir foto</span>
@@ -368,7 +368,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                       onChange={handleAvatarUpload}
                       className="hidden"
                     />
-                    <p className="text-[9px] text-white/40 mt-1">JPG, PNG (Máx 5MB)</p>
+                    <p className="text-[9px] text-text-3 mt-1">JPG, PNG (Máx 5MB)</p>
                   </div>
                 </div>
               </div>
@@ -377,16 +377,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Email */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-white/80">Correo Electrónico</label>
+            <label className="text-[11px] font-bold text-text-2">Correo Electrónico</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-3" />
               <input
                 type="email"
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@correo.com"
-                className="w-full bg-white/5 border border-white/10 rounded-2xl pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-white/5 border border-line rounded-2xl pl-9 pr-3 py-2 text-xs text-text-1 placeholder-text-3 focus:outline-none focus:border-orange-soft"
               />
             </div>
           </div>
@@ -394,16 +394,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* WhatsApp opcional al registrarse */}
           {mode === 'register' && (
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-white/80">WhatsApp (Opcional)</label>
+              <label className="text-[11px] font-bold text-text-2">WhatsApp (Opcional)</label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-3" />
                 <input
                   type="tel"
                   autoComplete="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Ej: 809-555-0199"
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#FF8A3D]"
+                  className="w-full bg-white/5 border border-line rounded-2xl pl-9 pr-3 py-2 text-xs text-text-1 placeholder-text-3 focus:outline-none focus:border-orange-soft"
                 />
               </div>
             </div>
@@ -411,16 +411,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Password */}
           <div className="space-y-1">
-            <label className="text-[11px] font-bold text-white/80">Contraseña</label>
+            <label className="text-[11px] font-bold text-text-2">Contraseña</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-3" />
               <input
                 type="password"
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-white/5 border border-white/10 rounded-2xl pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-white/5 border border-line rounded-2xl pl-9 pr-3 py-2 text-xs text-text-1 placeholder-text-3 focus:outline-none focus:border-orange-soft"
               />
             </div>
           </div>
@@ -428,11 +428,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* City Selection for Register */}
           {mode === 'register' && (
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-white/80">Tu Ciudad</label>
+              <label className="text-[11px] font-bold text-text-2">Tu Ciudad</label>
               <select
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full bg-[#1A1B1F] border border-white/10 rounded-2xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-surface border border-line rounded-2xl px-3 py-2 text-xs text-text-1 focus:outline-none focus:border-orange-soft"
               >
                 <option value="San Pedro de Macorís">San Pedro de Macorís</option>
                 <option value="Santo Domingo">Santo Domingo</option>
@@ -446,7 +446,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-[#FF6A00] to-[#e85f00] text-black font-extrabold text-xs sm:text-sm rounded-2xl hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shadow-lg shadow-[#FF6A00]/20 flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full mt-2 py-3 px-4 bg-gradient-to-r from-orange to-[#e85f00] text-[#0A0400] font-extrabold text-xs sm:text-sm rounded-2xl hover:scale-[1.02] active:scale-95 transition-all cursor-pointer shadow-lg shadow-orange/20 flex items-center justify-center gap-2 disabled:opacity-50"
           >
             {loading ? (
               <span>Procesando...</span>
@@ -460,8 +460,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </form>
 
         {/* Trust Note */}
-        <div className="bg-white/5 border border-white/5 rounded-2xl p-3 flex items-center gap-2 text-[10px] text-white/60">
-          <ShieldCheck className="w-4 h-4 text-[#FF8A3D] flex-shrink-0" />
+        <div className="bg-white/5 border border-line rounded-2xl p-3 flex items-center gap-2 text-[10px] text-text-2">
+          <ShieldCheck className="w-4 h-4 text-orange-soft flex-shrink-0" />
           <span>
             Tus datos están protegidos. Zyplaza no comparte tu teléfono sin tu consentimiento.
           </span>
