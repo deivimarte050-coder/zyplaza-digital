@@ -655,18 +655,18 @@ export default function App() {
   // --------------------- Splash inicial -------------------
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center gap-3 text-white">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FF6A00] to-[#FF8A3D] flex items-center justify-center animate-pulse">
-          <StoreIcon className="w-6 h-6 text-black" />
+      <div className="min-h-screen bg-void flex flex-col items-center justify-center gap-3 text-text-1 font-body">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange to-[#B8340A] flex items-center justify-center font-display font-bold text-[#0A0400] animate-pulse">
+          Z
         </div>
-        <p className="text-xs text-white/50 font-semibold">Cargando Zyplaza...</p>
+        <p className="text-xs text-text-3 font-semibold">Cargando Zyplaza...</p>
       </div>
     );
   }
 
   // ------------------------- Render -----------------------
   const appContent = (
-    <div className="min-h-screen bg-[#0A0A0A] text-white flex flex-col font-sans selection:bg-[#FF6A00] selection:text-black pb-20">
+    <div className="min-h-screen bg-void text-text-1 flex flex-col font-body selection:bg-orange selection:text-[#0A0400] pb-20">
       <Navbar
         currentCity={currentCity}
         onOpenCitySelector={() => setShowCitySelector(true)}
@@ -733,11 +733,11 @@ export default function App() {
       </main>
 
       {/* Bottom Fixed Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#0E0F12]/95 backdrop-blur-lg border-t border-white/10 text-white px-2 py-2 flex items-center justify-around shadow-2xl">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface/90 backdrop-blur-lg border-t border-line text-text-1 px-2 py-2 flex items-center justify-around shadow-2xl">
         <button
           onClick={() => setActiveTab('home')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition-all cursor-pointer ${
-            activeTab === 'home' ? 'text-[#FF6A00]' : 'text-white/50 hover:text-white'
+          className={`flex flex-col items-center gap-1 text-[10px] transition-all cursor-pointer ${
+            activeTab === 'home' ? 'text-orange-soft' : 'text-text-3 hover:text-text-1'
           }`}
         >
           <HomeIcon className="w-5 h-5" />
@@ -746,8 +746,8 @@ export default function App() {
 
         <button
           onClick={() => setActiveTab('stores')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition-all cursor-pointer ${
-            activeTab === 'stores' ? 'text-[#FF6A00]' : 'text-white/50 hover:text-white'
+          className={`flex flex-col items-center gap-1 text-[10px] transition-all cursor-pointer ${
+            activeTab === 'stores' ? 'text-orange-soft' : 'text-text-3 hover:text-text-1'
           }`}
         >
           <StoreIcon className="w-5 h-5" />
@@ -756,12 +756,11 @@ export default function App() {
 
         <button
           onClick={handleVenderClick}
-          className="flex flex-col items-center gap-1 text-[11px] font-bold text-[#FF6A00] transition-all cursor-pointer hover:scale-105"
+          className="flex flex-col items-center gap-1 text-[10px] text-text-3 transition-all cursor-pointer"
         >
-          <div className="w-10 h-10 rounded-full bg-[#FF6A00] text-black flex items-center justify-center -mt-4 border-4 border-[#0A0A0A] shadow-lg shadow-[#FF6A00]/30 font-black">
-            <PlusCircle className="w-6 h-6 text-black fill-black/20" />
+          <div className="w-[46px] h-[46px] rounded-[14px] -mt-6 bg-gradient-to-br from-orange to-[#C4400E] flex items-center justify-center text-[#0A0400] shadow-lg shadow-orange/35">
+            <PlusCircle className="w-5 h-5" />
           </div>
-          <span className="text-white/80 font-extrabold text-[10px]">Vender</span>
         </button>
 
         <button
@@ -772,12 +771,12 @@ export default function App() {
               setShowChatModal(true);
             }
           }}
-          className="relative flex flex-col items-center gap-1 text-[11px] font-bold text-white/50 hover:text-white transition-all cursor-pointer"
+          className="relative flex flex-col items-center gap-1 text-[10px] text-text-3 hover:text-text-1 transition-all cursor-pointer"
         >
           <MessageSquare className="w-5 h-5" />
           <span>Mensajes</span>
           {unreadTotal > 0 && (
-            <span className="absolute -top-1 right-2 w-4 h-4 rounded-full bg-[#FF6A00] text-black text-[9px] font-black flex items-center justify-center">
+            <span className="absolute -top-1 right-2 w-4 h-4 rounded-full bg-orange text-[#0A0400] text-[9px] font-black flex items-center justify-center">
               {unreadTotal}
             </span>
           )}
@@ -785,8 +784,8 @@ export default function App() {
 
         <button
           onClick={() => setActiveTab('profile')}
-          className={`flex flex-col items-center gap-1 text-[11px] font-bold transition-all cursor-pointer ${
-            activeTab === 'profile' ? 'text-[#FF6A00]' : 'text-white/50 hover:text-white'
+          className={`flex flex-col items-center gap-1 text-[10px] transition-all cursor-pointer ${
+            activeTab === 'profile' ? 'text-orange-soft' : 'text-text-3 hover:text-text-1'
           }`}
         >
           <User className="w-5 h-5" />

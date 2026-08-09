@@ -27,7 +27,9 @@ import {
   Home as HomeIcon,
   Car,
   Trophy,
-  TrendingUp
+  TrendingUp,
+  Search,
+  Plus
 } from 'lucide-react';
 
 interface HomeFeedProps {
@@ -89,88 +91,80 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
 
   return (
     <div className="space-y-4 pb-20 pt-1">
-      {/* 1. Category Tiles Bar (Exact matches screenshot) */}
-      <div className="overflow-x-auto no-scrollbar flex items-center gap-2.5 px-3.5 sm:px-4 max-w-7xl mx-auto">
-        {categories.map(cat => {
-          const isActive = filters.category === cat.id;
-          const IconComp = cat.icon;
-          return (
-            <button
-              key={cat.id}
-              onClick={() => onFilterChange({ category: cat.id })}
-              className={`flex flex-col items-center justify-center w-[72px] h-[68px] sm:w-20 sm:h-20 rounded-2xl flex-shrink-0 transition-all cursor-pointer ${
-                isActive || (cat.id === 'all' && filters.category === 'all')
-                  ? 'bg-[#3D2012] border border-[#FF6A00]/50 text-[#FF8A3D] shadow-md shadow-[#FF6A00]/10'
-                  : 'bg-[#18191C] border border-white/5 text-white/70 hover:bg-[#222429] hover:text-white'
-              }`}
-            >
-              <IconComp className={`w-5 h-5 mb-1.5 ${isActive ? 'text-[#FF8A3D]' : 'text-white/80'}`} />
-              <span className="text-[11px] font-medium leading-none text-center">{cat.label}</span>
-            </button>
-          );
-        })}
+      {/* 1. Category Tiles Bar */}
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-4">
+        <p className="font-mono text-[10.5px] tracking-[0.08em] uppercase text-text-3 mb-3">Categorías</p>
+        <div className="relative grid grid-cols-5 sm:flex sm:items-center sm:gap-4 gap-2">
+          <div className="hidden sm:block absolute top-[22px] left-[10%] right-[10%] h-px zy-dashed-line" />
+          {categories.map(cat => {
+            const isActive = filters.category === cat.id;
+            const IconComp = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => onFilterChange({ category: cat.id })}
+                className="relative z-10 flex flex-col items-center gap-2 cursor-pointer"
+              >
+                <div
+                  className={`w-11 h-11 rounded-[13px] flex items-center justify-center border transition-all ${
+                    isActive
+                      ? 'bg-orange-dim border-orange text-orange-soft'
+                      : 'bg-surface border-line text-orange-soft hover:border-line-strong'
+                  }`}
+                >
+                  <IconComp className="w-[18px] h-[18px]" />
+                </div>
+                <span className="text-[10.5px] text-text-2 text-center leading-tight">{cat.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* 2. Hero Banner (Dark warm orange background + 3D shopping bag) */}
+      {/* 2. Hero Banner */}
       <div className="max-w-7xl mx-auto px-3.5 sm:px-4">
-        <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-r from-[#170C06] via-[#2D1408] to-[#8A3402] p-4 sm:p-6 flex items-center justify-between shadow-2xl">
-          {/* Subtle Orange Glow Circle */}
-          <div className="absolute right-0 top-0 bottom-0 w-1/2 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#FF6A00]/30 via-transparent to-transparent pointer-events-none" />
+        <div
+          className="relative rounded-[18px] p-5 sm:p-6 border border-line overflow-hidden bg-surface"
+          style={{ backgroundImage: 'radial-gradient(circle at 85% -10%, rgba(255,94,26,0.35), transparent 55%)' }}
+        >
+          <div className="absolute inset-0 zy-grid-bg pointer-events-none" />
 
-          {/* Left Text Column */}
-          <div className="relative z-10 max-w-md space-y-2">
-            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#2B170C] border border-[#FF6A00]/30 text-[#FF8A3D] text-[10px] font-extrabold tracking-wider uppercase">
-              <Zap className="w-3 h-3 fill-[#FF8A3D] text-[#FF8A3D]" />
-              Semanas de Ofertas Locales
-            </span>
-            
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">
-              Ahorra hasta un <span className="text-[#FF8A3D]">40% en tecnología y moda</span> cerca de ti
-            </h1>
-            
-            <p className="text-[11px] sm:text-xs text-white/70 leading-normal font-normal max-w-xs">
-              Conecta directamente con vendedores particulares y negocios verificados de {filters.city || 'San Pedro de Macorís'}.
-            </p>
+          <span className="relative inline-flex items-center gap-1.5 font-mono text-[10.5px] text-orange-soft bg-orange-dim border border-orange/30 px-2.5 py-[5px] rounded-full mb-3.5">
+            <Zap className="w-[11px] h-[11px] fill-orange-soft" />
+            SEMANAS DE OFERTAS LOCALES
+          </span>
 
-            <div className="pt-1">
-              <button 
-                onClick={() => onFilterChange({ flashOnly: true })}
-                className="bg-white text-black font-extrabold text-xs px-4 py-2 rounded-full shadow-lg hover:bg-neutral-100 transition-all flex items-center gap-1 cursor-pointer"
-              >
-                <span>Ver ofertas</span>
-                <ChevronRight className="w-3.5 h-3.5 text-black" />
-              </button>
-            </div>
-          </div>
+          <h2 className="relative font-display font-semibold text-[21px] leading-[1.25] text-text-1 tracking-tight mb-2 max-w-[85%]">
+            Ahorra hasta <em className="text-orange-soft not-italic">40%</em> en tecnología y moda
+          </h2>
 
-          {/* Right 3D Shopping Bag Illustration */}
-          <div className="relative hidden xs:flex items-center justify-center w-28 sm:w-36 h-28 sm:h-36 flex-shrink-0">
-            {/* 3D Bag graphic rendering */}
-            <div className="relative w-24 h-28 bg-gradient-to-br from-[#2D2E33] to-[#121316] rounded-2xl shadow-2xl border border-white/20 flex flex-col items-center justify-center transform rotate-6 hover:rotate-0 transition-transform duration-300">
-              {/* Bag Handles */}
-              <div className="absolute -top-3 w-12 h-6 border-2 border-white/40 rounded-t-full pointer-events-none" />
-              {/* Giant Percent Symbol */}
-              <span className="text-4xl font-black text-[#FF6A00] tracking-tighter drop-shadow-[0_4px_12px_rgba(255,106,0,0.5)]">
-                %
-              </span>
-            </div>
-          </div>
+          <p className="relative text-[12.5px] text-text-2 leading-relaxed mb-4 max-w-[88%]">
+            Conecta directamente con vendedores particulares y negocios verificados de {filters.city || 'San Pedro de Macorís'}.
+          </p>
+
+          <button
+            onClick={() => onFilterChange({ flashOnly: true })}
+            className="relative inline-flex items-center gap-1.5 bg-text-1 text-void font-semibold text-[13px] px-4 py-2.5 rounded-[11px] cursor-pointer hover:opacity-90 transition-opacity"
+          >
+            Ver ofertas
+            <ChevronRight className="w-[13px] h-[13px]" />
+          </button>
         </div>
       </div>
 
       {/* 3. Trust Badges Row */}
       <div className="max-w-7xl mx-auto px-3.5 sm:px-4 py-1">
-        <div className="grid grid-cols-3 gap-1 bg-[#141518] border border-white/5 rounded-2xl p-2.5 text-center text-[10px] sm:text-xs text-white/70">
+        <div className="grid grid-cols-3 gap-1 bg-surface border border-line rounded-2xl p-2.5 text-center text-[10px] sm:text-xs text-text-2">
           <div className="flex items-center justify-center gap-1.5 px-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#FF8A3D] flex-shrink-0" />
+            <ShieldCheck className="w-3.5 h-3.5 text-orange-soft flex-shrink-0" />
             <span className="line-clamp-1 font-medium">Vendedores verificados</span>
           </div>
-          <div className="flex items-center justify-center gap-1.5 px-1 border-x border-white/10">
-            <Tag className="w-3.5 h-3.5 text-[#FF8A3D] flex-shrink-0" />
+          <div className="flex items-center justify-center gap-1.5 px-1 border-x border-line">
+            <Tag className="w-3.5 h-3.5 text-orange-soft flex-shrink-0" />
             <span className="line-clamp-1 font-medium">Las mejores ofertas</span>
           </div>
           <div className="flex items-center justify-center gap-1.5 px-1">
-            <Headphones className="w-3.5 h-3.5 text-[#FF8A3D] flex-shrink-0" />
+            <Headphones className="w-3.5 h-3.5 text-orange-soft flex-shrink-0" />
             <span className="line-clamp-1 font-medium">Soporte local rápido</span>
           </div>
         </div>
@@ -178,9 +172,9 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
 
       {/* Store search results (solo cuando hay búsqueda) */}
       {matchedStores.length > 0 && (
-        <section>
-          <h2 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5 mb-3">
-            <TrendingUp className="w-4 h-4 text-[#FF8A3D]" />
+        <section className="max-w-7xl mx-auto px-3.5 sm:px-4">
+          <h2 className="font-display font-semibold text-[15px] text-text-1 flex items-center gap-1.5 mb-3">
+            <TrendingUp className="w-4 h-4 text-orange-soft" />
             Tiendas encontradas
           </h2>
           <div className="flex gap-2.5 overflow-x-auto pb-1.5 no-scrollbar">
@@ -188,15 +182,15 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
               <div
                 key={store.id}
                 onClick={() => onSelectStore(store)}
-                className="flex-shrink-0 w-56 bg-neutral-900 border border-white/10 rounded-2xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-[#FF6A00]/50 transition-all active:scale-95"
+                className="flex-shrink-0 w-56 bg-surface border border-line rounded-2xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-orange/50 transition-all active:scale-95"
               >
-                <img src={store.logo} alt={store.name} className="w-11 h-11 rounded-xl object-cover border border-white/10 flex-shrink-0" />
+                <img src={store.logo} alt={store.name} className="w-11 h-11 rounded-xl object-cover border border-line flex-shrink-0" />
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-white truncate flex items-center gap-1">
+                  <p className="text-xs font-bold text-text-1 truncate flex items-center gap-1">
                     {store.name}
-                    {store.verified && <ShieldCheck className="w-3.5 h-3.5 text-[#FF8A3D]" />}
+                    {store.verified && <ShieldCheck className="w-3.5 h-3.5 text-orange-soft" />}
                   </p>
-                  <p className="text-[10px] text-white/50 truncate">{store.category} · {store.city}</p>
+                  <p className="text-[10px] text-text-2 truncate">{store.category} · {store.city}</p>
                 </div>
               </div>
             ))}
@@ -206,13 +200,13 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
 
       {/* Flash Deals (solo si hay ofertas reales) */}
       {flashItems.length > 0 && (
-        <section>
+        <section className="max-w-7xl mx-auto px-3.5 sm:px-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
-              <Zap className="w-4 h-4 text-[#FF8A3D] fill-[#FF8A3D]" />
+            <h2 className="font-display font-semibold text-[15px] text-text-1 flex items-center gap-1.5">
+              <Zap className="w-4 h-4 text-orange-soft fill-orange-soft" />
               Ofertas Relámpago
             </h2>
-            <div className="flex items-center gap-1 text-[10px] font-bold text-[#FF8A3D] bg-[#FF6A00]/10 px-2 py-0.5 rounded-md border border-[#FF6A00]/30">
+            <div className="flex items-center gap-1 text-[10px] font-bold text-orange-soft bg-orange-dim px-2 py-0.5 rounded-md border border-orange/30">
               <Clock className="w-3 h-3" />
               <span>Por tiempo limitado</span>
             </div>
@@ -252,17 +246,17 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
 
       {/* 6. All Listings Grid */}
       <section className="max-w-7xl mx-auto px-3.5 sm:px-4 pt-3">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm sm:text-base font-bold text-white">
+        <div className="flex items-center justify-between mb-3.5">
+          <h3 className="font-display font-semibold text-[15px] text-text-1">
             {searchQuery
               ? `Resultados para "${filters.searchQuery}" (${listings.length})`
-              : `Más Publicaciones Cercanas (${listings.length})`}
-          </h2>
+              : 'Publicaciones cercanas'}
+          </h3>
 
           <select
             value={filters.sortBy}
             onChange={(e) => onFilterChange({ sortBy: e.target.value as any })}
-            className="bg-[#18191C] border border-white/10 rounded-full px-2.5 py-1 text-[11px] text-white focus:outline-none focus:border-[#FF8A3D] cursor-pointer"
+            className="bg-transparent text-[12px] text-text-2 focus:outline-none cursor-pointer"
           >
             <option value="recent">Más recientes</option>
             <option value="price_asc">Menor precio</option>
@@ -271,15 +265,37 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
           </select>
         </div>
 
+        {listings.length === 0 ? (
+          <div className="border border-dashed border-line-strong rounded-2xl px-6 py-9 text-center">
+            <div className="w-[46px] h-[46px] rounded-[13px] bg-surface-2 border border-line flex items-center justify-center text-text-3 mx-auto mb-3.5">
+              <Search className="w-5 h-5" />
+            </div>
+            <h4 className="font-display font-semibold text-[14.5px] text-text-1 mb-1.5">
+              {searchQuery ? 'No encontramos coincidencias' : 'Aún no hay publicaciones aquí'}
+            </h4>
+            <p className="text-[12.5px] text-text-2 leading-relaxed max-w-[230px] mx-auto mb-4">
+              {searchQuery
+                ? 'Prueba con otra palabra clave o revisa más tarde: nuevos artículos se publican todos los días.'
+                : 'Sé el primero en vender cerca de ti. Tu artículo aparecerá aquí en cuanto lo publiques.'}
+            </p>
+            <button
+              onClick={onOpenCreateListing}
+              className="inline-flex items-center gap-1.5 bg-orange-dim text-orange-soft border border-orange/30 text-[12.5px] font-semibold px-3.5 py-2.5 rounded-[10px] cursor-pointer hover:bg-orange-dim/80 transition-colors"
+            >
+              <Plus className="w-[13px] h-[13px]" />
+              Publicar artículo
+            </button>
+          </div>
+        ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {listings.map(item => (
             <div
               key={item.id}
               onClick={() => onSelectListing(item)}
-              className="bg-[#18191C] border border-white/10 rounded-2xl overflow-hidden cursor-pointer hover:border-[#FF6A00]/40 transition-all shadow-md flex flex-col justify-between"
+              className="bg-surface border border-line rounded-2xl overflow-hidden cursor-pointer hover:border-orange/40 transition-all shadow-md flex flex-col justify-between"
             >
               <div>
-                <div className="relative aspect-square w-full bg-neutral-950 overflow-hidden">
+                <div className="relative aspect-square w-full bg-void overflow-hidden">
                   <img
                     src={item.images[0]}
                     alt={item.title}
@@ -287,8 +303,8 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
                     className="w-full h-full object-cover"
                   />
                   {item.isVerifiedStore && (
-                    <span className="absolute top-2 left-2 bg-black/80 backdrop-blur-md text-[#FF8A3D] text-[9px] font-bold px-1.5 py-0.5 rounded-md border border-[#FF6A00]/30 flex items-center gap-1">
-                      <BadgeCheck className="w-2.5 h-2.5 text-[#FF6A00]" />
+                    <span className="absolute top-2 left-2 bg-void/80 backdrop-blur-md text-orange-soft text-[9px] font-bold px-1.5 py-0.5 rounded-md border border-orange/30 flex items-center gap-1">
+                      <BadgeCheck className="w-2.5 h-2.5 text-orange" />
                       Verificado
                     </span>
                   )}
@@ -297,23 +313,23 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
                       e.stopPropagation();
                       onToggleFavorite(item.id);
                     }}
-                    className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 backdrop-blur-md text-white hover:text-red-500 transition-colors"
+                    className="absolute top-2 right-2 p-1.5 rounded-full bg-void/50 backdrop-blur-md text-text-1 hover:text-red-500 transition-colors"
                   >
                     <Heart className={`w-3.5 h-3.5 ${favorites.includes(item.id) ? 'fill-red-500 text-red-500' : ''}`} />
                   </button>
                 </div>
 
                 <div className="p-2.5 space-y-1">
-                  <h3 className="text-xs font-semibold text-white line-clamp-2 leading-snug">
+                  <h3 className="text-xs font-semibold text-text-1 line-clamp-2 leading-snug">
                     {item.title}
                   </h3>
 
                   <div className="flex items-baseline gap-1.5 pt-1">
-                    <span className="text-sm font-extrabold text-[#FF8A3D]">
+                    <span className="text-sm font-extrabold text-orange-soft">
                       RD$ {item.price.toLocaleString()}
                     </span>
                     {item.originalPrice && (
-                      <span className="text-[10px] text-white/40 line-through">
+                      <span className="text-[10px] text-text-3 line-through">
                         RD$ {item.originalPrice.toLocaleString()}
                       </span>
                     )}
@@ -321,7 +337,7 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
                 </div>
               </div>
 
-              <div className="p-2.5 pt-0 flex items-center justify-between text-[10px] text-white/50">
+              <div className="p-2.5 pt-0 flex items-center justify-between text-[10px] text-text-2">
                 <span className="truncate max-w-[100px]">{item.sellerName}</span>
                 <span className="flex items-center gap-0.5">
                   <MapPin className="w-2.5 h-2.5 text-[#FF8A3D]" />
@@ -331,6 +347,7 @@ export const HomeFeed: React.FC<HomeFeedProps> = ({
             </div>
           ))}
         </div>
+        )}
       </section>
     </div>
   );
