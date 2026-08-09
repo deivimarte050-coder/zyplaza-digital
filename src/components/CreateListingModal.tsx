@@ -154,19 +154,19 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-[#121212] border border-white/10 rounded-3xl overflow-hidden shadow-2xl my-auto text-white max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-2xl bg-surface border border-line rounded-3xl overflow-hidden shadow-2xl my-auto text-text-1 max-h-[90vh] flex flex-col font-body">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-[#121212]/90 backdrop-blur-md">
+        <div className="p-4 sm:p-5 border-b border-line flex items-center justify-between bg-surface/90 backdrop-blur-md">
           <div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-white flex items-center gap-2">
-              <PackageCheck className="w-5 h-5 text-[#FF8A3D]" />
+            <h2 className="text-lg sm:text-xl font-display font-semibold text-text-1 flex items-center gap-2">
+              <PackageCheck className="w-5 h-5 text-orange-soft" />
               {isEditing ? 'Editar Artículo' : 'Publicar Nuevo Artículo'}
             </h2>
-            <p className="text-xs text-white/50">Vende rápido a compradores de tu ciudad</p>
+            <p className="text-xs text-text-2">Vende rápido a compradores de tu ciudad</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all cursor-pointer"
+            className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-text-1 transition-all cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -182,27 +182,27 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
 
           {/* Images picker */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-white/80">Fotos del Artículo * (máx {MAX_IMAGES})</label>
+            <label className="text-xs font-bold text-text-2">Fotos del Artículo * (máx {MAX_IMAGES})</label>
             <div className="flex flex-wrap gap-2">
               {existingImages.map((src, idx) => (
-                <div key={`existing-${idx}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/10">
+                <div key={`existing-${idx}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-line">
                   <img src={src} alt="" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => removeExistingImage(idx)}
-                    className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white hover:text-red-400"
+                    className="absolute top-1 right-1 p-1 rounded-full bg-void/70 text-text-1 hover:text-red-400"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
               ))}
               {imagePreviews.map((src, idx) => (
-                <div key={`new-${idx}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-[#FF6A00]/40">
+                <div key={`new-${idx}`} className="relative w-20 h-20 rounded-xl overflow-hidden border border-orange/40">
                   <img src={src} alt="" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => removeNewImage(idx)}
-                    className="absolute top-1 right-1 p-1 rounded-full bg-black/70 text-white hover:text-red-400"
+                    className="absolute top-1 right-1 p-1 rounded-full bg-void/70 text-text-1 hover:text-red-400"
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -212,7 +212,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-20 h-20 rounded-xl border-2 border-dashed border-white/20 hover:border-[#FF8A3D] flex flex-col items-center justify-center gap-1 text-white/40 hover:text-[#FF8A3D] transition-all cursor-pointer"
+                  className="w-20 h-20 rounded-xl border-2 border-dashed border-line-strong hover:border-orange-soft flex flex-col items-center justify-center gap-1 text-text-3 hover:text-orange-soft transition-all cursor-pointer"
                 >
                   <Camera className="w-5 h-5" />
                   <span className="text-[9px] font-bold">Agregar</span>
@@ -227,52 +227,52 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
               onChange={handlePickImages}
               className="hidden"
             />
-            <p className="text-[10px] text-white/40">JPG, PNG o WEBP. Se comprimen automáticamente para cargar rápido.</p>
+            <p className="text-[10px] text-text-3">JPG, PNG o WEBP. Se comprimen automáticamente para cargar rápido.</p>
           </div>
 
           {/* Title input */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-white/80">Título del Artículo *</label>
+            <label className="text-xs font-bold text-text-2">Título del Artículo *</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ej: Laptop Lenovo Core i5 16GB RAM o Tenis Nike Talla 41"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+              className="w-full bg-white/5 border border-line rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
             />
           </div>
 
           {/* Category & Condition */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-white/80">Categoría</label>
+              <label className="text-xs font-bold text-text-2">Categoría</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-white/5 border border-line rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
               >
-                <option value="tech" className="bg-neutral-900">Tecnología y Gadgets</option>
-                <option value="fashion" className="bg-neutral-900">Moda y Ropa</option>
-                <option value="home" className="bg-neutral-900">Hogar y Muebles</option>
-                <option value="vehicles" className="bg-neutral-900">Vehículos</option>
-                <option value="sports" className="bg-neutral-900">Deportes</option>
-                <option value="beauty" className="bg-neutral-900">Belleza</option>
+                <option value="tech" className="bg-surface-2">Tecnología y Gadgets</option>
+                <option value="fashion" className="bg-surface-2">Moda y Ropa</option>
+                <option value="home" className="bg-surface-2">Hogar y Muebles</option>
+                <option value="vehicles" className="bg-surface-2">Vehículos</option>
+                <option value="sports" className="bg-surface-2">Deportes</option>
+                <option value="beauty" className="bg-surface-2">Belleza</option>
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-white/80">Estado del Producto</label>
+              <label className="text-xs font-bold text-text-2">Estado del Producto</label>
               <select
                 value={condition}
                 onChange={(e) => setCondition(e.target.value as ItemCondition)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-white/5 border border-line rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
               >
-                <option value="Nuevo" className="bg-neutral-900">Nuevo (En caja)</option>
-                <option value="Como Nuevo" className="bg-neutral-900">Como Nuevo (Poco uso)</option>
-                <option value="Buen Estado" className="bg-neutral-900">Buen Estado</option>
-                <option value="Usado" className="bg-neutral-900">Usado</option>
-                <option value="Reacondicionado" className="bg-neutral-900">Reacondicionado</option>
+                <option value="Nuevo" className="bg-surface-2">Nuevo (En caja)</option>
+                <option value="Como Nuevo" className="bg-surface-2">Como Nuevo (Poco uso)</option>
+                <option value="Buen Estado" className="bg-surface-2">Buen Estado</option>
+                <option value="Usado" className="bg-surface-2">Usado</option>
+                <option value="Reacondicionado" className="bg-surface-2">Reacondicionado</option>
               </select>
             </div>
           </div>
@@ -280,37 +280,37 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
           {/* Price inputs */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-white/80">Precio de Venta (RD$) *</label>
+              <label className="text-xs font-bold text-text-2">Precio de Venta (RD$) *</label>
               <input
                 type="number"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
                 placeholder="2500"
                 required
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-white/5 border border-line rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-white/80">Precio Original (Opcional)</label>
+              <label className="text-xs font-bold text-text-2">Precio Original (Opcional)</label>
               <input
                 type="number"
                 value={originalPrice}
                 onChange={(e) => setOriginalPrice(e.target.value)}
                 placeholder="4000"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-white/5 border border-line rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-white/80">Stock disponible</label>
+              <label className="text-xs font-bold text-text-2">Stock disponible</label>
               <input
                 type="number"
                 min="0"
                 value={stock}
                 onChange={(e) => setStock(e.target.value)}
                 placeholder="1"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-white/5 border border-line rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
               />
             </div>
           </div>
@@ -318,33 +318,33 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
           {/* City & Sector */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-white/80">Ciudad</label>
+              <label className="text-xs font-bold text-text-2">Ciudad</label>
               <select
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-white/5 border border-line rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
               >
                 {CITIES.map(c => (
-                  <option key={c} value={c} className="bg-neutral-900">{c}</option>
+                  <option key={c} value={c} className="bg-surface-2">{c}</option>
                 ))}
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-white/80">Sector / Barrio</label>
+              <label className="text-xs font-bold text-text-2">Sector / Barrio</label>
               <input
                 type="text"
                 value={sector}
                 onChange={(e) => setSector(e.target.value)}
                 placeholder="Ej: Miramar, Centro, Los Jardines"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+                className="w-full bg-white/5 border border-line rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
               />
             </div>
           </div>
 
           {/* Delivery option */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-white/80">Modalidad de Entrega</label>
+            <label className="text-xs font-bold text-text-2">Modalidad de Entrega</label>
             <div className="grid grid-cols-3 gap-2">
               {(['Punto Neutro / Presencial', 'Envío Local', 'A Convenir'] as const).map(opt => (
                 <button
@@ -353,8 +353,8 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
                   onClick={() => setDeliveryOption(opt)}
                   className={`px-3 py-2 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
                     deliveryOption === opt
-                      ? 'bg-[#FF6A00] text-black border-[#FF6A00]'
-                      : 'bg-white/5 text-white/70 border-white/10 hover:border-white/20'
+                      ? 'bg-orange text-[#0A0400] border-orange'
+                      : 'bg-white/5 text-text-2 border-line hover:border-line-strong'
                   }`}
                 >
                   {opt}
@@ -365,27 +365,27 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
 
           {/* Description textarea */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-white/80">Descripción Detallada</label>
+            <label className="text-xs font-bold text-text-2">Descripción Detallada</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               placeholder="Describe los detalles, tiempo de uso, motivo de venta e información importante..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+              className="w-full bg-white/5 border border-line rounded-xl p-3 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
             />
           </div>
 
           {/* Tags */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-white/80">Palabras clave (separadas por coma)</label>
+            <label className="text-xs font-bold text-text-2">Palabras clave (separadas por coma)</label>
             <input
               type="text"
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
               placeholder="Ej: iphone, apple, smartphone, 5g"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-[#FF8A3D]"
+              className="w-full bg-white/5 border border-line rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-text-1 focus:outline-none focus:border-orange-soft"
             />
-            <p className="text-[10px] text-white/40">Ayudan a que tus compradores te encuentren en el buscador.</p>
+            <p className="text-[10px] text-text-3">Ayudan a que tus compradores te encuentren en el buscador.</p>
           </div>
 
           {/* Submit */}
@@ -393,13 +393,13 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#FF6A00] to-[#e85f00] text-black font-extrabold text-sm hover:scale-105 transition-all shadow-lg shadow-[#FF6A00]/25 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full py-3.5 rounded-full bg-gradient-to-r from-orange to-[#e85f00] text-[#0A0400] font-extrabold text-sm hover:scale-105 transition-all shadow-lg shadow-orange/25 cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {submitting ? (
                 <span>{isEditing ? 'Guardando cambios...' : 'Publicando...'}</span>
               ) : (
                 <>
-                  <Upload className="w-4 h-4 text-black" />
+                  <Upload className="w-4 h-4" />
                   <span>{isEditing ? 'Guardar Cambios' : 'Publicar Artículo Ahora'}</span>
                 </>
               )}
