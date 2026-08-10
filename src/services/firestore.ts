@@ -230,7 +230,7 @@ function toChatMessage(id: string, conversationId: string, data: Record<string, 
 
 /** Todas las tiendas activas (feed público). */
 export function subscribeActiveStores(cb: (stores: Store[]) => void): Unsubscribe {
-  const q = query(collection(getDb(), 'stores'), where('status', '==', 'active'));
+  const q = query(collection(getDb(), 'stores'), where('status', 'in', ['active', 'approved']));
   return onSnapshot(q, (snap) => {
     cb(snap.docs.map((d) => toStore(d.id, d.data())));
   });
@@ -245,7 +245,7 @@ export function subscribeStore(storeId: string, cb: (store: Store | null) => voi
 
 /** Productos activos (feed público). */
 export function subscribeActiveListings(cb: (listings: Listing[]) => void): Unsubscribe {
-  const q = query(collection(getDb(), 'products'), where('status', '==', 'active'));
+  const q = query(collection(getDb(), 'products'), where('status', 'in', ['active', 'approved']));
   return onSnapshot(q, (snap) => {
     const items = snap.docs.map((d) => toListing(d.id, d.data()));
     items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));

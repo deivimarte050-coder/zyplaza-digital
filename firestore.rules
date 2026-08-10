@@ -42,7 +42,7 @@ service cloud.firestore {
     // Tiendas: lectura pública si están activas; el dueño las edita salvo 'verified'.
     // Cualquier usuario autenticado puede seguir/dejar de seguir (solo followersCount).
     match /stores/{storeId} {
-      allow read: if resource.data.status == 'active'
+      allow read: if resource.data.status in ['active', 'approved']
         || isAdmin()
         || isOwner(resource.data.ownerId);
       allow create: if signedIn()
@@ -58,7 +58,7 @@ service cloud.firestore {
 
     // Productos: lectura pública de los activos; el vendedor gestiona los suyos.
     match /products/{productId} {
-      allow read: if resource.data.status == 'active'
+      allow read: if resource.data.status in ['active', 'approved']
         || isAdmin()
         || isOwner(resource.data.sellerId);
       allow create: if signedIn()
