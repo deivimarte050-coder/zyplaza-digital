@@ -123,6 +123,13 @@ function toStore(id: string, data: Record<string, unknown>): Store {
       instagram: asString(socialsRaw.instagram) || undefined,
       twitter: asString(socialsRaw.twitter) || undefined,
     },
+    location: data.location && typeof data.location === 'object'
+      ? {
+          lat: asNumber((data.location as Record<string, unknown>).lat),
+          lng: asNumber((data.location as Record<string, unknown>).lng),
+          address: asString((data.location as Record<string, unknown>).address) || undefined,
+        }
+      : undefined,
     status: (data.status as Store['status']) ?? 'active',
     sellerLevel: asString(data.sellerLevel, 'Nuevo Vendedor'),
     createdAt: asString(data.createdAt) || undefined,

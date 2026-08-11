@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Store as StoreIcon, Phone, FileText, Camera, Upload, CheckCircle, Rocket, MapPin, Clock, Save } from 'lucide-react';
-import { Store } from '../types';
+import { Store, StoreLocation } from '../types';
 import { CITIES } from '../data/mockData';
 import { readFileAsDataUrl } from '../services/imageUpload';
+import { StoreLocationPicker } from './StoreLocationPicker';
 
 export interface CreateStoreInput {
   name: string;
@@ -17,6 +18,7 @@ export interface CreateStoreInput {
   facebook: string;
   instagram: string;
   twitter: string;
+  location?: StoreLocation;
   logoFile: File | null;
   bannerFile: File | null;
 }
@@ -68,6 +70,7 @@ export const CreateStoreModal: React.FC<CreateStoreModalProps> = ({ isOpen, onCl
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
@@ -87,6 +90,7 @@ export const CreateStoreModal: React.FC<CreateStoreModalProps> = ({ isOpen, onCl
         facebook: initialStore.socials?.facebook || '',
         instagram: initialStore.socials?.instagram || '',
         twitter: initialStore.socials?.twitter || '',
+        location: initialStore.location || undefined,
         logoFile: null,
         bannerFile: null,
       });
@@ -340,6 +344,33 @@ export const CreateStoreModal: React.FC<CreateStoreModalProps> = ({ isOpen, onCl
                 </div>
               </div>
 
+              {/* Ubicación GPS */}
+              <div className="p-3.5 rounded-2xl border border-line bg-white/5 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-orange-soft" />
+                    <span className="text-xs font-bold text-text-1">Ubicación de la tienda</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowLocationPicker(true)}
+                    className="px-3 py-1.5 rounded-xl bg-orange/15 border border-orange/30 text-orange-soft text-[10px] font-bold hover:bg-orange/25 transition-all"
+                  >
+                    {form.location ? 'Cambiar ubicación' : 'Configurar ubicación'}
+                  </button>
+                </div>
+                {form.location ? (
+                  <p className="text-[10px] text-text-2">
+                    Lat: {form.location.lat.toFixed(6)}, Lng: {form.location.lng.toFixed(6)}
+                    {form.location.address ? ` — ${form.location.address}` : ''}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-text-3">
+                    ⚠️ Configura la ubicación de tu tienda para que tus clientes puedan encontrarte.
+                  </p>
+                )}
+              </div>
+
               {/* Contacto */}
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
@@ -443,6 +474,17 @@ export const CreateStoreModal: React.FC<CreateStoreModalProps> = ({ isOpen, onCl
           </>
         )}
       </div>
+
+      {showLocationPicker && (
+        <StoreLocationPicker
+          initial={form.location || null}
+          onConfirm={(loc) => {
+            set({ location: loc });
+            setShowLocationPicker(false);
+          }}
+          onClose={() => setShowLocationPicker(false)}
+        />
+      )}
     </div>
   );
 };

@@ -373,6 +373,7 @@ export default function App() {
         logo: logoUrl,
         coverImage: bannerUrl,
         socials: { facebook: input.facebook, instagram: input.instagram, twitter: input.twitter },
+        location: input.location,
         ownerName: currentUser.name,
         ownerAvatar: currentUser.avatar,
       });

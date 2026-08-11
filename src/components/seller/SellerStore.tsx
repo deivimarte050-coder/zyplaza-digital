@@ -12,6 +12,7 @@ import {
   Facebook,
   Instagram,
   Twitter,
+  AlertTriangle,
 } from 'lucide-react';
 import { Store } from '../../types';
 
@@ -98,6 +99,24 @@ export const SellerStore: React.FC<SellerStoreProps> = ({ store, onEditStore }) 
           <p className="text-[10px] text-text-3 font-semibold">Respuesta</p>
         </div>
       </div>
+
+      {/* Alerta de ubicación no configurada */}
+      {!store.location && (
+        <div className="rounded-2xl border border-orange/30 bg-orange/5 p-4 space-y-2">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-orange flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-bold text-text-1">Configura la ubicación de tu tienda para que tus clientes puedan encontrarte.</p>
+            </div>
+          </div>
+          <button
+            onClick={onEditStore}
+            className="w-full py-2 rounded-xl bg-orange text-[#0A0400] text-xs font-extrabold hover:bg-orange-soft transition-all"
+          >
+            Configurar ubicación
+          </button>
+        </div>
+      )}
 
       {/* Información de contacto */}
       <div className="rounded-2xl border border-line bg-surface p-5 space-y-3">

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { toggleFollowStore } from '../services/firestore';
 import { ShareCatalogMenu } from './catalog/ShareCatalogMenu';
+import { StoreLocationModal } from './StoreLocationModal';
 
 interface StoreProfileModalProps {
   store: Store | null;
@@ -55,6 +56,7 @@ export const StoreProfileModal: React.FC<StoreProfileModalProps> = ({
   const [showShareCatalog, setShowShareCatalog] = useState(false);
   const [catalogSearch, setCatalogSearch] = useState('');
   const [catalogCategory, setCatalogCategory] = useState('all');
+  const [showLocation, setShowLocation] = useState(false);
 
   const isFollowing = !!(
     store && currentUser?.followingStores && currentUser.followingStores.includes(store.id)
@@ -227,12 +229,22 @@ export const StoreProfileModal: React.FC<StoreProfileModalProps> = ({
 
             {/* Stats bar */}
             <div className="grid grid-cols-3 gap-2 bg-white/5 border border-line rounded-2xl p-3 text-center">
-              <div>
-                <span className="block text-base font-extrabold text-text-1">
-                  {store.followersCount.toLocaleString()}
-                </span>
-                <span className="text-[10px] text-text-2">Seguidores</span>
-              </div>
+              {store.location ? (
+                <button
+                  onClick={() => setShowLocation(true)}
+                  className="flex flex-col items-center justify-center gap-0.5 text-text-1 hover:text-orange-soft transition-colors cursor-pointer"
+                >
+                  <span className="block text-base font-extrabold">📍</span>
+                  <span className="text-[10px] font-bold">Ver ubicación</span>
+                </button>
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-0.5">
+                  <span className="block text-base font-extrabold text-text-1">
+                    {store.followersCount.toLocaleString()}
+                  </span>
+                  <span className="text-[10px] text-text-2">Seguidores</span>
+                </div>
+              )}
               <div>
                 <span className="block text-base font-extrabold text-orange-soft">⭐ {avgRating}</span>
                 <span className="text-[10px] text-text-2">{reviewCount} opiniones</span>
@@ -400,6 +412,13 @@ export const StoreProfileModal: React.FC<StoreProfileModalProps> = ({
           storeName={store.name}
           productCount={storeListings.length}
           onClose={() => setShowShareCatalog(false)}
+        />
+      )}
+
+      {showLocation && store.location && (
+        <StoreLocationModal
+          store={store}
+          onClose={() => setShowLocation(false)}
         />
       )}
     </div>

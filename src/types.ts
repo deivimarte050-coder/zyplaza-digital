@@ -36,6 +36,12 @@ export interface StoreSocials {
   twitter?: string;
 }
 
+export interface StoreLocation {
+  lat: number;
+  lng: number;
+  address?: string;
+}
+
 export interface Store {
   id: string;
   name: string;
@@ -61,6 +67,7 @@ export interface Store {
   phone?: string;
   email?: string;
   socials?: StoreSocials;
+  location?: StoreLocation;
   status?: 'active' | 'pending' | 'suspended';
   sellerLevel?: string;
   createdAt?: string;
