@@ -19,9 +19,11 @@ import {
   ShoppingBag,
   Users,
   PhoneCall,
-  UserPlus
+  UserPlus,
+  Link2
 } from 'lucide-react';
 import { toggleFollowStore } from '../services/firestore';
+import { ShareCatalogMenu } from './catalog/ShareCatalogMenu';
 
 interface StoreProfileModalProps {
   store: Store | null;
@@ -49,6 +51,7 @@ export const StoreProfileModal: React.FC<StoreProfileModalProps> = ({
   const [activeTab, setActiveTab] = useState<'products' | 'reviews'>('products');
   const [copied, setCopied] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
+  const [showShareCatalog, setShowShareCatalog] = useState(false);
 
   const isFollowing = !!(
     store && currentUser?.followingStores && currentUser.followingStores.includes(store.id)
@@ -193,6 +196,14 @@ export const StoreProfileModal: React.FC<StoreProfileModalProps> = ({
                   <MessageSquare className="w-3.5 h-3.5 text-orange-soft" />
                   <span>Chat App</span>
                 </button>
+
+                <button
+                  onClick={() => setShowShareCatalog(true)}
+                  className="px-3 py-1.5 rounded-full bg-orange/15 border border-orange/30 hover:bg-orange/25 text-orange-soft text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                  <span>Compartir catálogo</span>
+                </button>
               </div>
             </div>
 
@@ -301,6 +312,15 @@ export const StoreProfileModal: React.FC<StoreProfileModalProps> = ({
           </div>
         </div>
       </div>
+
+      {showShareCatalog && (
+        <ShareCatalogMenu
+          url={`${window.location.origin}/catalogo/${store.slug}`}
+          storeName={store.name}
+          productCount={storeListings.length}
+          onClose={() => setShowShareCatalog(false)}
+        />
+      )}
     </div>
   );
 };

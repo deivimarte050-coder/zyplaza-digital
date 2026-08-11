@@ -193,6 +193,27 @@ export default function App() {
     };
   }, []);
 
+  // ------ Enlaces profundos desde el catálogo compartido (?store=, ?auth=) --
+  const [deepLinkHandled, setDeepLinkHandled] = useState(false);
+  useEffect(() => {
+    if (deepLinkHandled || stores.length === 0 || authLoading) return;
+    const params = new URLSearchParams(window.location.search);
+    const storeParam = params.get('store');
+    const wantsAuth = params.get('auth') === '1';
+
+    if (storeParam) {
+      const found = stores.find((s) => s.id === storeParam || s.slug === storeParam);
+      if (found) setSelectedStore(found);
+    }
+    if (wantsAuth && !currentUser) {
+      setShowAuthModal(true);
+    }
+    if (storeParam || wantsAuth) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    setDeepLinkHandled(true);
+  }, [stores, authLoading, currentUser, deepLinkHandled]);
+
   // --------- Tienda del usuario (incluso si está inactiva) -
   useEffect(() => {
     if (!currentUser?.storeId) {

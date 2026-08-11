@@ -253,6 +253,40 @@ export function subscribeActiveListings(cb: (listings: Listing[]) => void): Unsu
   });
 }
 
+/** Tienda pública por slug, para el catálogo compartible (sin necesidad de cuenta). */
+export function subscribeStoreBySlug(slug: string, cb: (store: Store | null) => void): Unsubscribe {
+  const q = query(
+    collection(getDb(), 'stores'),
+    where('slug', '==', slug),
+    where('status', 'in', ['active', 'approved'])
+  );
+  return onSnapshot(
+    q,
+    (snap) => {
+      cb(snap.empty ? null : toStore(snap.docs[0].id, snap.docs[0].data()));
+    },
+    () => cb(null)
+  );
+}
+
+/** Productos públicos de una tienda (catálogo compartible). */
+export function subscribeListingsByStore(storeId: string, cb: (listings: Listing[]) => void): Unsubscribe {
+  const q = query(
+    collection(getDb(), 'products'),
+    where('storeId', '==', storeId),
+    where('status', 'in', ['active', 'approved'])
+  );
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = snap.docs.map((d) => toListing(d.id, d.data()));
+      items.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      cb(items);
+    },
+    () => cb([])
+  );
+}
+
 /** Todos los productos de un vendedor (panel y perfil), incluidos inactivos. */
 export function subscribeSellerListings(sellerId: string, cb: (listings: Listing[]) => void): Unsubscribe {
   const q = query(collection(getDb(), 'products'), where('sellerId', '==', sellerId));
