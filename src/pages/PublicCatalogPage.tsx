@@ -2,8 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   Search,
   MapPin,
-  Star,
-  Package,
   BadgeCheck,
   Share2,
   X,
@@ -12,6 +10,8 @@ import {
   ExternalLink,
   ShoppingBag,
   Layers,
+  Clock,
+  Phone,
 } from 'lucide-react';
 import { Listing, Store } from '../types';
 import {
@@ -274,23 +274,7 @@ export const PublicCatalogPage: React.FC = () => {
           </div>
           <p className="text-xs text-orange-soft font-semibold">{store.category}</p>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs text-text-3">
-            <span className="flex items-center gap-1">
-              <Star className="w-3.5 h-3.5 text-amber-400" /> {store.rating.toFixed(1)}
-            </span>
-            <span className="flex items-center gap-1">
-              <MapPin className="w-3.5 h-3.5" /> {store.city}
-            </span>
-            <span className="flex items-center gap-1">
-              <Package className="w-3.5 h-3.5" /> {listings.length} productos
-            </span>
-          </div>
-
-          {store.description && (
-            <p className="text-xs text-text-2 max-w-md leading-relaxed mt-1">{store.description}</p>
-          )}
-
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-1">
             <button
               onClick={() => goToApp()}
               className="px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-text-1 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
@@ -317,6 +301,49 @@ export const PublicCatalogPage: React.FC = () => {
               Compartir
             </button>
           </div>
+        </div>
+
+        {/* Estadísticas de la tienda */}
+        <div className="grid grid-cols-3 gap-2 bg-white/5 border border-line rounded-2xl p-3 text-center mt-5">
+          <div>
+            <span className="block text-base font-extrabold text-text-1">
+              {store.followersCount.toLocaleString()}
+            </span>
+            <span className="text-[10px] text-text-3">Seguidores</span>
+          </div>
+          <div>
+            <span className="block text-base font-extrabold text-orange-soft">⭐ {store.rating.toFixed(1)}</span>
+            <span className="text-[10px] text-text-3">{store.reviewsCount} opiniones</span>
+          </div>
+          <div>
+            <span className="block text-base font-extrabold text-text-1">{listings.length}</span>
+            <span className="text-[10px] text-text-3">Artículos activos</span>
+          </div>
+        </div>
+
+        {/* Ubicación, horario y contacto */}
+        <div className="space-y-2 text-xs text-text-2 bg-white/5 p-3.5 rounded-2xl border border-line mt-3">
+          {(store.address || store.city) && (
+            <p className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-orange-soft flex-shrink-0" />
+              <span>{[store.address, store.city].filter(Boolean).join(', ')}</span>
+            </p>
+          )}
+          <p className="flex items-center gap-2">
+            <Clock className="w-4 h-4 text-orange-soft flex-shrink-0" />
+            <span>{store.openingHours} (Responde en {store.responseTime})</span>
+          </p>
+          {store.phone && (
+            <p className="flex items-center gap-2">
+              <Phone className="w-4 h-4 text-orange-soft flex-shrink-0" />
+              <a href={`tel:${store.phone.replace(/[^\d+]/g, '')}`} className="hover:text-orange-soft transition-colors">
+                {store.phone}
+              </a>
+            </p>
+          )}
+          {store.description && (
+            <p className="text-text-2 pt-1.5 border-t border-line leading-relaxed">{store.description}</p>
+          )}
         </div>
 
         {/* Buscador */}
