@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Store, Listing, UserProfileData, Review } from '../types';
 import { ReviewSection } from './ReviewSection';
 import { 
@@ -20,7 +20,8 @@ import {
   Users,
   PhoneCall,
   UserPlus,
-  Link2
+  Link2,
+  Search
 } from 'lucide-react';
 import { toggleFollowStore } from '../services/firestore';
 import { ShareCatalogMenu } from './catalog/ShareCatalogMenu';
@@ -52,6 +53,8 @@ export const StoreProfileModal: React.FC<StoreProfileModalProps> = ({
   const [copied, setCopied] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
   const [showShareCatalog, setShowShareCatalog] = useState(false);
+  const [catalogSearch, setCatalogSearch] = useState('');
+  const [catalogCategory, setCatalogCategory] = useState('all');
 
   const isFollowing = !!(
     store && currentUser?.followingStores && currentUser.followingStores.includes(store.id)
@@ -104,6 +107,21 @@ export const StoreProfileModal: React.FC<StoreProfileModalProps> = ({
     reviewCount > 0
       ? (storeReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1)
       : '0.0';
+
+  const catalogCategories = useMemo(() => {
+    const set = new Set<string>();
+    storeListings.forEach((l) => l.category && set.add(l.category));
+    return Array.from(set);
+  }, [storeListings]);
+
+  const filteredCatalog = useMemo(() => {
+    const q = catalogSearch.trim().toLowerCase();
+    return storeListings.filter((l) => {
+      if (catalogCategory !== 'all' && l.category !== catalogCategory) return false;
+      if (!q) return true;
+      return l.title.toLowerCase().includes(q) || l.category.toLowerCase().includes(q);
+    });
+  }, [storeListings, catalogSearch, catalogCategory]);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-fade-in">
@@ -278,25 +296,88 @@ export const StoreProfileModal: React.FC<StoreProfileModalProps> = ({
                 Catálogo de la Tienda ({storeListings.length})
               </h3>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {storeListings.map(item => (
-                  <div
-                    key={item.id}
-                    onClick={() => onSelectListing(item)}
-                    className="group bg-surface-2 border border-line hover:border-orange/50 rounded-2xl overflow-hidden cursor-pointer transition-all hover:-translate-y-1"
-                  >
-                    <div className="aspect-square overflow-hidden bg-void">
-                      <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    </div>
-                    <div className="p-2.5">
-                      <h4 className="text-xs font-bold text-text-1 line-clamp-1">{item.title}</h4>
-                      <p className="text-xs font-extrabold text-orange-soft mt-1">
-                        RD$ {item.price.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-3" />
+                <input
+                  type="text"
+                  value={catalogSearch}
+                  onChange={(e) => setCatalogSearch(e.target.value)}
+                  placeholder="Buscar productos..."
+                  className="w-full bg-white/5 border border-line rounded-xl pl-9 pr-3 py-2.5 text-xs text-text-1 placeholder-text-3 focus:outline-none focus:border-orange"
+                />
               </div>
+
+              {catalogCategories.length > 0 && (
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
+                  <button
+                    onClick={() => setCatalogCategory('all')}
+                    className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                      catalogCategory === 'all' ? 'bg-orange text-void' : 'bg-white/5 text-text-2 hover:bg-white/10'
+                    }`}
+                  >
+                    Todos
+                  </button>
+                  {catalogCategories.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCatalogCategory(c)}
+                      className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer ${
+                        catalogCategory === c ? 'bg-orange text-void' : 'bg-white/5 text-text-2 hover:bg-white/10'
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {filteredCatalog.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-line-strong p-8 text-center">
+                  <p className="text-xs font-bold text-text-2">Sin productos que coincidan</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {filteredCatalog.map((item) => {
+                    const outOfStock = typeof item.stock === 'number' && item.stock <= 0;
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => onSelectListing(item)}
+                        className="group bg-surface-2 border border-line hover:border-orange/50 rounded-2xl overflow-hidden cursor-pointer transition-all hover:-translate-y-1 flex flex-col"
+                      >
+                        <div className="relative aspect-square overflow-hidden bg-void">
+                          <img src={item.images[0]} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          {outOfStock && (
+                            <div className="absolute inset-0 bg-void/60 flex items-center justify-center">
+                              <span className="text-[9px] font-extrabold text-white bg-red-500/90 px-2 py-0.5 rounded-full">
+                                Agotado
+                              </span>
+                            </div>
+                          )}
+                          {item.category && (
+                            <span className="absolute bottom-1.5 left-1.5 text-[8px] font-bold uppercase tracking-wide bg-void/60 backdrop-blur text-text-1 px-1.5 py-0.5 rounded-full">
+                              {item.category}
+                            </span>
+                          )}
+                        </div>
+                        <div className="p-2.5 flex-1 flex flex-col gap-1">
+                          <h4 className="text-xs font-bold text-text-1 line-clamp-2 min-h-[2rem]">{item.title}</h4>
+                          <p className="text-xs font-extrabold text-orange-soft">RD$ {item.price.toLocaleString()}</p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelectListing(item);
+                            }}
+                            className="mt-auto pt-1 text-[10px] font-bold text-text-2 hover:text-orange-soft transition-colors text-left"
+                          >
+                            Ver producto →
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Store Opinions Section */}
